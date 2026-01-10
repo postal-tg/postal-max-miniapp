@@ -1,0 +1,36 @@
+.tooltip {
+  background: #ffffff;
+  border-radius: 4px;
+  padding: 6px;
+  border: 1px solid #e5e7eb;
+  font-size: 8px;
+  line-height: 9px;
+}
+
+.tooltip-date {
+  color: #222222;
+  margin-bottom: 4px;
+}
+
+.tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.tooltip-label {
+  color: #898989;
+}
+
+.tooltip-value {
+  color: #2b79d6;
+  font-weight: 500;
+}
+
+.tooltip-pos {
+  color: #6ac778;
+}
+
+.tooltip-neg {
+  color: #d56666;
+}

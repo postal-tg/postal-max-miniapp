@@ -1,0 +1,264 @@
+/* src/pages/ChannelStatsPage/ChannelStatsPage.css */
+
+.stats-page {
+  max-width: 360px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: #f7f7f7;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Roboto", "Segoe UI", sans-serif;
+}
+
+/* Верх */
+
+.stats-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  height: 19px;
+  padding: 12px;
+}
+
+.stats-top-back {
+  border: none;
+  background: none;
+  padding: 0;
+  color: #2563eb;
+  cursor: pointer;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 16px;
+}
+
+.stats-top-title {
+  font-weight: 500;
+  color: #111827;
+}
+
+/* Общая статистика */
+
+.stats-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  line-height: 1;
+  border-top: 1px solid #e5e7eb;
+}
+
+.stats-section-main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 12px;
+  background: #f3f3f3;
+}
+
+.stats-title-row {
+  text-align: center;
+}
+
+.stats-title {
+  font-size: 14px;
+  line-height: 1;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #2563eb;
+}
+
+.stats-period {
+  font-size: 10px;
+  color: #222222;
+  opacity: 50%;
+}
+
+.overview-container {
+  display: flex;
+  gap: 16px;
+  flex-direction: column;
+}
+
+/* Синяя плашка */
+
+.stats-main-counter {
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.stats-main-counter-caption {
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 14px;
+  color: #222222;
+  opacity: 80%;
+  text-align: center;
+  margin-bottom: 2px;
+}
+
+.stats-main-counter-value {
+  font-size: 24px;
+  line-height: 28px;
+  font-weight: 500;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 6px;
+  background: #2b79d6;
+  color: #ffffff;
+  border-radius: 8px;
+  margin: 0 auto;
+}
+
+/* Белые карточки внутри (Охват / За сегодня / За месяц) */
+
+.stats-main-card {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 8px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stats-main-title {
+  font-size: 12px;
+  line-height: 14px;
+  text-align: center;
+  font-weight: 500;
+  color: #222222;
+  opacity: 80%;
+}
+
+.stats-main-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.stats-main-col {
+  flex: 1;
+  text-align: center;
+}
+
+.stats-main-value {
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.stats-main-label {
+  font-size: 10px;
+  color: #222222;
+  opacity: 50%;
+}
+
+.diff-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stats-main-diff_pos {
+  color: #6ac778;
+}
+
+.stats-main-diff_neg {
+  color: #d56666;
+}
+
+/* Секции графиков */
+
+.stats-section {
+  padding: 12px;
+  background: #f3f3f3;
+}
+
+.stats-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+
+.stats-section-title {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.stats-section-period {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.stats-chart-wrapper {
+  width: 100%;
+  height: 180px;
+}
+
+/* Легенда подписчиков */
+
+.stats-legend-badges {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.stats-badge {
+  font-size: 10px;
+  line-height: 12px;
+  color: #ffffff;
+  padding: 6px 10px;
+  border-radius: 100px;
+}
+
+.stats-badge_pos {
+  background: #16a34a;
+}
+
+.stats-badge_neg {
+  background: #ef4444;
+}
+
+/* Тоггл для Охвата */
+
+.stats-toggle-wrapper {
+  display: flex;
+}
+
+.stats-range-toggle_bottom {
+  margin-top: 8px;
+  margin-left: auto;
+  padding: 2px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+}
+
+.stats-range-btn {
+  border: none;
+  background: transparent;
+  padding: 4px 12px;
+  font-size: 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  color: #4b5563;
+}
+
+.stats-range-btn_active {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+/* Статусы */
+
+.stats-status {
+  font-size: 13px;
+  color: #4b5563;
+  margin: 4px 0 8px;
+}
+
+.stats-status_error {
+  color: #b91c1c;
+}
