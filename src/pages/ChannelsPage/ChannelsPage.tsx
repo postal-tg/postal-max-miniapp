@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { channelApi } from "../../entities/channel/api";
 import type { Channel } from "../../entities/channel/types";
 import "./ChannelsPage.css";
+import { Loader } from "@/shared/ui/Loader/Loader";
 
 export function ChannelsPage() {
   const [channels, setChannels] = useState<Channel[]>([]);
@@ -46,7 +47,7 @@ export function ChannelsPage() {
         />
       </header>
 
-      {isLoading && <div className="channels-status">Загрузка…</div>}
+      {isLoading && <Loader />}
       {error && <div className="channels-status channels-status_error">{error}</div>}
 
       {!isLoading && !error && filtered.length === 0 && (

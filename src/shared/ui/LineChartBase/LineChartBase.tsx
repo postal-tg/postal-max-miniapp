@@ -7,7 +7,6 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import type { ReactNode } from "react";
 import { formatRuShortDateNoYear } from "@/shared/utils/formatDate";
 import type { ContentType } from "recharts/types/component/Tooltip";
 import { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
@@ -28,7 +27,7 @@ export function LineChartBase<T extends object>({ data, lines, tooltipContent, x
   return (
     <ResponsiveContainer width="100%" height={180}>
       <LineChart data={data}>
-        <CartesianGrid stroke="#e5e7eb" strokeDasharray="3 3" />
+        <CartesianGrid stroke="#e5e7eb" strokeDasharray="3 3" vertical={false} />
         <XAxis
           dataKey="date"
           tickLine={false}
@@ -45,6 +44,7 @@ export function LineChartBase<T extends object>({ data, lines, tooltipContent, x
           tick={{ fontSize: 8, fill: "#ababab" }}
           tickFormatter={(value) => value.toLocaleString("ru-RU")}
           domain={["dataMin", "dataMax"]}
+          width={"auto"}
         />
         {tooltipContent ? <Tooltip content={tooltipContent} /> : <Tooltip />}
         {lines.map((line) => (

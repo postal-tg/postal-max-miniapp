@@ -4,7 +4,7 @@
   min-height: 100vh;
   padding: 16px 16px 24px;
   background: #f3f4f6;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  box-sizing: border-box;
 }
 
 .channels-header {
@@ -27,7 +27,7 @@
   border: 1px solid #d1d5db;
   font-size: 14px;
   outline: none;
-box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 .channels-search:focus {

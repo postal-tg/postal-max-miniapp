@@ -1,11 +1,10 @@
 /* src/pages/ChannelStatsPage/ChannelStatsPage.css */
 
 .stats-page {
-  max-width: 360px;
+  max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;
   background: #f7f7f7;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Roboto", "Segoe UI", sans-serif;
 }
 
 /* Верх */
@@ -15,7 +14,7 @@
   justify-content: space-between;
   align-items: center;
   font-size: 13px;
-  height: 19px;
+  height: 43px;
   padding: 12px;
 }
 
@@ -36,6 +35,7 @@
 .stats-top-title {
   font-weight: 500;
   color: #111827;
+  font-size: 16px;
 }
 
 /* Общая статистика */
@@ -145,6 +145,7 @@
 .stats-main-value {
   font-size: 20px;
   font-weight: 500;
+  color: #222222;
 }
 
 .stats-main-label {
@@ -207,18 +208,38 @@
 
 .stats-badge {
   font-size: 10px;
-  line-height: 12px;
+  line-height: 1;
   color: #ffffff;
-  padding: 6px 10px;
+  padding: 0 10px;
   border-radius: 100px;
+  height: 24px;
+  cursor: pointer;
+  box-sizing: border-box;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+}
+
+.stats-badge_pos.stats-badge_inactive {
+  background: #ffffff;
+  opacity: 0.6;
+  color: #6ac778;
+  outline: 1px solid #6ac778;
+}
+
+.stats-badge_neg.stats-badge_inactive {
+  background: #ffffff;
+  opacity: 0.6;
+  color: #d56666;
+  outline: 1px solid #d56666;
 }
 
 .stats-badge_pos {
-  background: #16a34a;
+  background: #6ac778;
 }
 
 .stats-badge_neg {
-  background: #ef4444;
+  background: #d56666;
 }
 
 /* Тоггл для Охвата */
@@ -244,6 +265,7 @@
   border-radius: 999px;
   cursor: pointer;
   color: #4b5563;
+  font-weight: 500;
 }
 
 .stats-range-btn_active {

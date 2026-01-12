@@ -1,26 +1,24 @@
 // src/pages/ChannelStatsPage/ChannelStatsPage.tsx
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import {
-  LineChart,
-  Line,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import { ResponsiveContainer } from "recharts";
 import { statsApi } from "@/entities/stats/api";
 import type { ChannelStats } from "@/entities/stats/types";
 import "./ChannelStatsPage.css";
-import { formatRuShortDate, formatRuShortDateNoYear } from "@/shared/utils/formatDate";
+import { formatRuShortDate } from "@/shared/utils/formatDate";
 import { GrowthTooltip } from "@/features/stats/ui/GrowthTooltip/GrowthTooltip";
 import { SubscribersTooltip } from "@/features/stats/ui/SubscribersTooltip/SubscribersTooltip";
 import { ChartsTooltip } from "@/features/stats/ui/ChartsTooltip/ChartsTooltip";
 import { LineChartBase } from "@/shared/ui/LineChartBase/LineChartBase";
 import { BackArrowIcon } from "@/shared/ui/BackArrowIcon/BackArrowIcon";
+import { Loader } from "@/shared/ui/Loader/Loader";
 
 type Range = "24h" | "48h";
+
+type LineDef = {
+  dataKey: string;
+  color: string;
+};
 
 export function ChannelStatsPage() {
   const { id } = useParams<{ id: string }>();
@@ -30,6 +28,9 @@ export function ChannelStatsPage() {
   const [stats, setStats] = useState<ChannelStats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [onSubsribers, setOnSubscribers] = useState(true);
+  const [onUnsubsribers, setOnUnsubscribers] = useState(true);
+  const [chartLines, setChartLines] = useState<LineDef[]>([]);
 
   const location = useLocation();
   const state = location.state as { title?: string } | null;
@@ -56,6 +57,19 @@ export function ChannelStatsPage() {
     return points.slice(half);
   }, [stats, range]);
 
+  useEffect(() => {
+    const lines = [];
+    if (onSubsribers) {
+      lines.push({ dataKey: "subscribed", color: "#6AC778" });
+    }
+
+    if (onUnsubsribers) {
+      lines.push({ dataKey: "unsubscribed", color: "#d56666" });
+    }
+
+    setChartLines(lines);
+  }, [onSubsribers, onUnsubsribers]);
+
   if (!id) return <div>Channel id is missing</div>;
 
   return (
@@ -69,7 +83,7 @@ export function ChannelStatsPage() {
         <div className="stats-top-title">{channelTitle}</div>
       </div>
 
-      {isLoading && <div className="stats-status">Загрузка…</div>}
+      {isLoading && <Loader />}
       {error && <div className="stats-status stats-status_error">{error}</div>}
 
       {stats && !isLoading && !error && (
@@ -186,17 +200,28 @@ export function ChannelStatsPage() {
               <ResponsiveContainer width="100%" height={180}>
                 <LineChartBase
                   data={stats.subscribersChart.points}
-                  lines={[
-                    { dataKey: "subscribed", color: "#16a34a" },
-                    { dataKey: "unsubscribed", color: "#ef4444" },
-                  ]}
+                  lines={chartLines}
                   tooltipContent={<SubscribersTooltip />}
                 />
               </ResponsiveContainer>
             </div>
             <div className="stats-legend-badges">
-              <span className="stats-badge stats-badge_pos">Подписались</span>
-              <span className="stats-badge stats-badge_neg">Отписались</span>
+              <span
+                className={`stats-badge stats-badge_pos${
+                  !onSubsribers ? " stats-badge_inactive" : ""
+                }`}
+                onClick={() => setOnSubscribers(!onSubsribers)}
+              >
+                Подписались
+              </span>
+              <span
+                className={`stats-badge stats-badge_neg${
+                  !onUnsubsribers ? " stats-badge_inactive" : ""
+                }`}
+                onClick={() => setOnUnsubscribers(!onUnsubsribers)}
+              >
+                Отписались
+              </span>
             </div>
           </section>
 
