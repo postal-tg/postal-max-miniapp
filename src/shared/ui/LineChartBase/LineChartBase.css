@@ -1,0 +1,4 @@
+.recharts-wrapper svg:focus,
+.recharts-wrapper g:focus {
+  outline: none;
+}

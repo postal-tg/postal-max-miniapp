@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { ResponsiveContainer } from "recharts";
 import { statsApi } from "@/entities/stats/api";
-import type { ChannelStats } from "@/entities/stats/types";
+import type { ChannelStats, StatsRange } from "@/entities/stats/types";
 import "./ChannelStatsPage.css";
 import { formatRuShortDate } from "@/shared/utils/formatDate";
 import { GrowthTooltip } from "@/features/stats/ui/GrowthTooltip/GrowthTooltip";
@@ -12,19 +12,24 @@ import { ChartsTooltip } from "@/features/stats/ui/ChartsTooltip/ChartsTooltip";
 import { LineChartBase } from "@/shared/ui/LineChartBase/LineChartBase";
 import { BackArrowIcon } from "@/shared/ui/BackArrowIcon/BackArrowIcon";
 import { Loader } from "@/shared/ui/Loader/Loader";
-
-type Range = "24h" | "48h";
+import { formatToK } from "@/shared/utils/formatNumbers";
 
 type LineDef = {
   dataKey: string;
   color: string;
 };
 
+const REACH_CONFIG = {
+  "24h": { label: "24 часа", statsKey: "last24hours" },
+  "48h": { label: "48 часов", statsKey: "last48hours" },
+  "72h": { label: "72 часа", statsKey: "last72hours" },
+} as const;
+
 export function ChannelStatsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const [range, setRange] = useState<Range>("24h");
+  const [range, setRange] = useState<StatsRange>("24h");
   const [stats, setStats] = useState<ChannelStats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,8 +38,9 @@ export function ChannelStatsPage() {
   const [chartLines, setChartLines] = useState<LineDef[]>([]);
 
   const location = useLocation();
-  const state = location.state as { title?: string } | null;
+  const state = location.state as { title: string; avatarUrl: string } | null;
   const channelTitle = state?.title ?? "Канал";
+  const channelAvatarUrl = state?.avatarUrl ?? null;
 
   useEffect(() => {
     if (!id) return;
@@ -48,14 +54,6 @@ export function ChannelStatsPage() {
       .catch((e) => setError(e.message ?? "Failed to load stats"))
       .finally(() => setIsLoading(false));
   }, [id]);
-
-  const reachPointsForRange = useMemo(() => {
-    if (!stats) return [];
-    const points = stats.reachChart.points;
-    if (range === "48h") return points;
-    const half = Math.floor(points.length / 2);
-    return points.slice(half);
-  }, [stats, range]);
 
   useEffect(() => {
     const lines = [];
@@ -80,7 +78,12 @@ export function ChannelStatsPage() {
           <BackArrowIcon />
           <span>Назад</span>
         </button>
-        <div className="stats-top-title">{channelTitle}</div>
+        <div className="stats-top-right">
+          {channelAvatarUrl && (
+            <img src={channelAvatarUrl} alt={channelTitle} className="stats-top-avatar" />
+          )}
+          <div className="stats-top-title">{channelTitle}</div>
+        </div>
       </div>
 
       {isLoading && <Loader />}
@@ -109,19 +112,18 @@ export function ChannelStatsPage() {
               {/* Охват 24 / 48 */}
               <div className="stats-main-card">
                 <div className="stats-main-title">Охват</div>
-                <div className="stats-main-row">
-                  <div className="stats-main-col">
-                    <div className="stats-main-value">
-                      {stats.overview.reach.current.toLocaleString("ru-RU")}
+                <div className="stats-main-row stats-main-row_three-col">
+                  {Object.values(REACH_CONFIG).map(({ label, statsKey }) => (
+                    <div className="stats-main-col" key={statsKey}>
+                      <div className="stats-reach-label">{label}</div>
+                      <div className="stats-main-value">
+                        {formatToK(stats.overview.reach[statsKey].count)}
+                      </div>
+                      <div className="stats-main-label stats-main-label_up">
+                        {`ER: ${stats.overview.reach[statsKey].er}%`}
+                      </div>
                     </div>
-                    <div className="stats-main-label">24 часа</div>
-                  </div>
-                  <div className="stats-main-col">
-                    <div className="stats-main-value">
-                      {stats.overview.reach.previous.toLocaleString("ru-RU")}
-                    </div>
-                    <div className="stats-main-label">48 часов</div>
-                  </div>
+                  ))}
                 </div>
               </div>
 
@@ -132,13 +134,13 @@ export function ChannelStatsPage() {
                   <div className="stats-main-row">
                     <div className="stats-main-col">
                       <div className="stats-main-value stats-main-diff_pos">
-                        +{stats.overview.today.subscribed.toLocaleString("ru-RU")}
+                        +{formatToK(stats.overview.today.subscribed)}
                       </div>
                       <div className="stats-main-label">Подписалось</div>
                     </div>
                     <div className="stats-main-col">
                       <div className="stats-main-value stats-main-diff_neg">
-                        -{stats.overview.today.unsubscribed.toLocaleString("ru-RU")}
+                        -{formatToK(stats.overview.today.unsubscribed)}
                       </div>
                       <div className="stats-main-label">Отписалось</div>
                     </div>
@@ -151,13 +153,13 @@ export function ChannelStatsPage() {
                   <div className="stats-main-row">
                     <div className="stats-main-col">
                       <div className="stats-main-value stats-main-diff_pos">
-                        +{stats.overview.month.subscribed.toLocaleString("ru-RU")}
+                        +{formatToK(stats.overview.month.subscribed)}
                       </div>
                       <div className="stats-main-label">Подписалось</div>
                     </div>
                     <div className="stats-main-col">
                       <div className="stats-main-value stats-main-diff_neg">
-                        -{stats.overview.month.unsubscribed.toLocaleString("ru-RU")}
+                        -{formatToK(stats.overview.month.unsubscribed)}
                       </div>
                       <div className="stats-main-label">Отписалось</div>
                     </div>
@@ -237,7 +239,7 @@ export function ChannelStatsPage() {
             <div className="stats-chart-wrapper">
               <ResponsiveContainer width="100%" height={180}>
                 <LineChartBase
-                  data={reachPointsForRange}
+                  data={stats.reachChart.points[REACH_CONFIG[range].statsKey]}
                   lines={[{ dataKey: "reach", color: "#3b82f6" }]}
                   tooltipContent={<ChartsTooltip />}
                 />
@@ -245,18 +247,21 @@ export function ChannelStatsPage() {
             </div>
             <div className="stats-toggle-wrapper">
               <div className="stats-range-toggle_bottom">
-                <button
-                  className={`stats-range-btn ${range === "24h" ? "stats-range-btn_active" : ""}`}
-                  onClick={() => setRange("24h")}
-                >
-                  24 часа
-                </button>
-                <button
-                  className={`stats-range-btn ${range === "48h" ? "stats-range-btn_active" : ""}`}
-                  onClick={() => setRange("48h")}
-                >
-                  48 часов
-                </button>
+                {(Object.keys(REACH_CONFIG) as StatsRange[]).map((value) => {
+                  const { label } = REACH_CONFIG[value];
+
+                  return (
+                    <button
+                      key={value}
+                      className={`stats-range-btn ${
+                        range === value ? "stats-range-btn_active" : ""
+                      }`}
+                      onClick={() => setRange(value)}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </section>

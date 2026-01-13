@@ -1,10 +1,7 @@
 /* src/pages/ChannelStatsPage/ChannelStatsPage.css */
 
 .stats-page {
-  max-width: 480px;
-  margin: 0 auto;
-  min-height: 100vh;
-  background: #f7f7f7;
+  background: #f3f3f3;
 }
 
 /* Верх */
@@ -14,8 +11,10 @@
   justify-content: space-between;
   align-items: center;
   font-size: 13px;
-  height: 43px;
-  padding: 12px;
+  height: 48px;
+  padding: 0 12px;
+  margin: 0 12px;
+  border-top: 1px solid #e9e9e9;
 }
 
 .stats-top-back {
@@ -38,6 +37,19 @@
   font-size: 16px;
 }
 
+.stats-top-right {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+}
+
+.stats-top-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
 /* Общая статистика */
 
 .stats-container {
@@ -45,7 +57,6 @@
   flex-direction: column;
   gap: 16px;
   line-height: 1;
-  border-top: 1px solid #e5e7eb;
 }
 
 .stats-section-main {
@@ -134,11 +145,19 @@
 
 .stats-main-row {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-around;
+}
+
+.stats-main-row_three-col .stats-main-col {
+  border-right: 1px solid #ededed;
+  width: 33%;
+}
+
+.stats-main-row_three-col .stats-main-col:last-child {
+  border-right: none;
 }
 
 .stats-main-col {
-  flex: 1;
   text-align: center;
 }
 
@@ -150,8 +169,26 @@
 
 .stats-main-label {
   font-size: 10px;
+  line-height: 1.2;
   color: #222222;
   opacity: 50%;
+}
+
+.stats-main-label_up {
+  font-size: 12px;
+  line-height: 1.2;
+  margin-top: 2px;
+}
+
+.stats-reach-label {
+  font-size: 10px;
+  line-height: 1.2;
+  background: #70a8eb;
+  color: #ffffff;
+  padding: 3px 8px 2px;
+  margin-bottom: 6px;
+  border-radius: 100px;
+  display: inline-flex;
 }
 
 .diff-container {

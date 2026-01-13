@@ -11,6 +11,8 @@ import { formatRuShortDateNoYear } from "@/shared/utils/formatDate";
 import type { ContentType } from "recharts/types/component/Tooltip";
 import { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
 
+import "./LineChartBase.css";
+
 type LineDef = {
   dataKey: string;
   color: string;
@@ -55,6 +57,7 @@ export function LineChartBase<T extends object>({ data, lines, tooltipContent, x
             stroke={line.color}
             strokeWidth={2}
             dot={false}
+            isAnimationActive={false}
           />
         ))}
       </LineChart>

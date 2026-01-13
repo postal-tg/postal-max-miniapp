@@ -10,8 +10,18 @@ export type StatsSummary = {
 
 export type StatsOverview = {
   reach: {
-    current: number;   // 24 часа
-    previous: number;  // 48 часов
+    last24hours: {
+      count: number;
+      er: number;
+    }; // 24 часа
+    last48hours: {
+      count: number;
+      er: number;
+    }; // 48 часов
+    last72hours: {
+      count: number;
+      er: number;
+    };
   };
   today: {
     subscribed: number;
@@ -49,8 +59,12 @@ export type ChannelStats = {
     points: SubscribersPoint[];
   };
   reachChart: {
-    points: ReachPoint[];
+    points: {
+      last24hours: ReachPoint[];
+      last48hours: ReachPoint[];
+      last72hours: ReachPoint[];
+    };
   };
 };
 
-export type StatsRange = "24h" | "48h";
+export type StatsRange = "24h" | "48h" | "72h";

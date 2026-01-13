@@ -32,7 +32,9 @@ export function ChannelsPage() {
   }, [channels, search]);
 
   const handleOpenChannel = (channel: Channel) => {
-    navigate(`/channels/${channel.id}`, { state: { title: channel.title } });
+    navigate(`/channels/${channel.id}`, {
+      state: { title: channel.title, avatarUrl: channel.avatarUrl },
+    });
   };
 
   return (
