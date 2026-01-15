@@ -25,9 +25,7 @@ export function ChartsTooltip({ active, label, payload }: ChartsTooltipProps) {
       </div>
       <div className="tooltip-row">
         <span className="tooltip-label">Охват</span>
-        <span className="tooltip-value tooltip-pos">
-          {Number(item.payload?.reach).toLocaleString("ru-RU")}
-        </span>
+        <span className="tooltip-value">{Number(item.payload?.reach).toLocaleString("ru-RU")}</span>
       </div>
     </div>
   );
