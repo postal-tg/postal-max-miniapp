@@ -1,0 +1,153 @@
+.reach-page {
+  padding: 16px 16px 24px;
+  background: #f3f4f6;
+  box-sizing: border-box;
+}
+
+.reach-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.reach-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.reach-search {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.reach-search:focus {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 1px #8b5cf6;
+}
+
+.reach-status {
+  font-size: 14px;
+  color: #4b5563;
+}
+
+.reach-status_error {
+  color: #b91c1c;
+}
+
+.reach-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reach-item {
+  padding: 12px;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.reach-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reach-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 20px;
+}
+
+.reach-item-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.reach-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.reach-item-title {
+  font-size: 12px;
+  font-weight: 500;
+  flex: 1;
+  min-width: 0;
+}
+
+.reach-item-subscribers {
+  font-size: 8px;
+  color: #919191;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.reach-item-stats {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 35px;
+}
+
+.reach-item-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border-radius: 8px;
+  background: #F7F7F7;
+  flex-grow: 1;
+  padding: 4px;
+}
+
+.reach-stat-label {
+  color: #919191;
+  font-weight: 400;
+  font-size: 8px;
+  line-height: 9px;
+}
+
+.reach-stat-value {
+  color: #2B79D6;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 14px;
+}
+
+.reach-empty {
+  margin-top: 80px;
+  text-align: center;
+  padding: 0 16px;
+}
+
+.reach-empty-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #2563eb;
+  margin-bottom: 8px;
+}
+
+.reach-empty-text {
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.4;
+}
