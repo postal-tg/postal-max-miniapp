@@ -15,81 +15,18 @@ function mapChannel(item: UserChannelsListResponse["channels"][number]): Channel
   };
 }
 
-// Mock данные для разных post_id
-const mockChannelsWithReachByPostId: Record<string, ChannelWithReach[]> = {
-  post_1: [
-    {
-      id: "ch_123",
-      title: "Название 1",
-      avatarUrl: "https://ui-avatars.com/api/?name=Channel+1&background=0D8ABC&color=fff",
-      subscribersCount: 142698,
-      reach: {
-        last24hours: {
-          count: 2800,
-        },
-        last48hours: {
-          count: 3800,
-        },
-        last72hours: {
-          count: 24300,
-        },
-      },
+function mapChannelWithReach(
+  item: UserChannelsListResponse["channels"][number]
+): ChannelWithReach {
+  return {
+    ...mapChannel(item),
+    reach: {
+      last24hours: { count: item.reach.last24Hours },
+      last48hours: { count: item.reach.last48Hours },
+      last72hours: { count: item.reach.last72Hours },
     },
-    {
-      id: "ch_122",
-      title: "Название 2",
-      avatarUrl: "https://ui-avatars.com/api/?name=Channel+1&background=0D8ABC&color=fff",
-      subscribersCount: 70,
-      reach: {
-        last24hours: {
-          count: 2800,
-        },
-        last48hours: {
-          count: 10800,
-        },
-        last72hours: {
-          count: 108000,
-        },
-      },
-    },
-  ],
-  post_2: [
-    {
-      id: "ch_123",
-      title: "Название 1",
-      avatarUrl: "https://ui-avatars.com/api/?name=Channel+1&background=0D8ABC&color=fff",
-      subscribersCount: 142698,
-      reach: {
-        last24hours: {
-          count: 1500,
-        },
-        last48hours: {
-          count: 2500,
-        },
-        last72hours: {
-          count: 12000,
-        },
-      },
-    },
-    {
-      id: "ch_122",
-      title: "Название 2",
-      avatarUrl: "https://ui-avatars.com/api/?name=Channel+1&background=0D8ABC&color=fff",
-      subscribersCount: 70,
-      reach: {
-        last24hours: {
-          count: 5000,
-        },
-        last48hours: {
-          count: 15000,
-        },
-        last72hours: {
-          count: 50000,
-        },
-      },
-    },
-  ],
-};
+  };
+}
 
 let channelsPromise: Promise<Channel[]> | null = null;
 
@@ -112,15 +49,14 @@ export const channelApi = {
     return p;
   },
 
-  getChannelsWithReach(postId: string): Promise<ChannelWithReach[]> {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const data = mockChannelsWithReachByPostId[postId];
-        if (!data) {
-          return reject(new Error(`No data found for post_id: ${postId}`));
-        }
-        resolve(data);
-      }, 300);
-    });
+  async getChannelsWithReach(postUuid: string): Promise<ChannelWithReach[]> {
+    const url = `${CHANNELS_URL}/post/${encodeURIComponent(postUuid)}`;
+    const res = await fetchWithAuth(url, { method: "GET" });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text || `Ошибка загрузки каналов поста: ${res.status}`);
+    }
+    const json = (await res.json()) as UserChannelsListResponse;
+    return json.channels.map(mapChannelWithReach);
   },
 };

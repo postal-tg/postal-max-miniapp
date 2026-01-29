@@ -17,7 +17,7 @@ type AuthContextValue = AuthState & {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function getInitData(): string | null {
+export function getInitData(): string | null {
   return typeof window !== "undefined" ? window.WebApp?.initData ?? null : null;
 }
 
