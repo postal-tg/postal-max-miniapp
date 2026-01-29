@@ -1,37 +1,23 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/app/providers/AuthProvider";
-import { channelApi } from "../../entities/channel/api";
+import { useChannels } from "@/app/providers/ChannelsProvider";
 import type { Channel } from "../../entities/channel/types";
 import { Loader } from "@/shared/ui/Loader/Loader";
 import "./ChannelsPage.css";
 
 export function ChannelsPage() {
   const { isLoading: authLoading, error: authError, retry } = useAuth();
-  const [channels, setChannels] = useState<Channel[]>([]);
+  const { channels, isLoading, error, refetch } = useChannels();
   const [search, setSearch] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (authLoading || authError) return;
-    setIsLoading(true);
-    channelApi
-      .getChannels()
-      .then((data) => {
-        setChannels(data);
-        setError(null);
-      })
-      .catch((e) => setError(e.message ?? "Failed to load channels"))
-      .finally(() => setIsLoading(false));
-  }, [authLoading, authError]);
-
   const filtered = useMemo(() => {
+    const list = channels ?? [];
     const q = search.trim().toLowerCase();
-    if (!q) return channels;
-    return channels.filter((ch) => ch.title.toLowerCase().includes(q));
+    if (!q) return list;
+    return list.filter((ch) => ch.title.toLowerCase().includes(q));
   }, [channels, search]);
 
   const handleOpenChannel = (channel: Channel) => {
@@ -40,7 +26,7 @@ export function ChannelsPage() {
     });
   };
 
-  if (authLoading || isLoading) return <Loader />;
+  if (authLoading || (channels === null && isLoading)) return <Loader />;
   if (authError)
     return (
       <div className="channels-page">
@@ -63,9 +49,16 @@ export function ChannelsPage() {
         />
       </header>
 
-      {error && <div className="channels-status channels-status_error">{error}</div>}
+      {error && (
+        <>
+          <div className="channels-status channels-status_error">{error}</div>
+          <button type="button" className="channels-retry" onClick={refetch}>
+            Повторить
+          </button>
+        </>
+      )}
 
-      {!error && filtered.length === 0 && (
+      {!error && channels !== null && filtered.length === 0 && (
         <div className="channels-empty">
           <div className="channels-empty-title">У вас пока нет ни 1 канала</div>
           <div className="channels-empty-text">
