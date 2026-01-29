@@ -1,20 +1,19 @@
-import type { Channel, ChannelWithReach } from "./types";
+import { API_BASE_URL } from "@/shared/config/api";
+import { fetchWithAuth } from "@/shared/api/client";
+import type { Channel, ChannelWithReach, UserChannelsListResponse } from "./types";
 
-const mockChannels: Channel[] = [
-  {
-    id: "ch_123",
-    title: "Название 1",
-    avatarUrl: "https://ui-avatars.com/api/?name=Channel+1&background=0D8ABC&color=fff",
-    subscribersCount: 142698,
-  },
-  {
-    id: "ch_122",
-    title: "Название 2",
-    avatarUrl: "https://ui-avatars.com/api/?name=Channel+1&background=0D8ABC&color=fff",
-    subscribersCount: 70,
-  },
-  // ещё несколько каналов...
-];
+const CHANNELS_URL = `${API_BASE_URL}/max/channels/webapp/channels`;
+
+function mapChannel(item: UserChannelsListResponse["channels"][number]): Channel {
+  return {
+    id: String(item.channelId),
+    title: item.title,
+    avatarUrl:
+      item.photo ??
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(item.title)}&background=0D8ABC&color=fff`,
+    subscribersCount: item.participantsCount,
+  };
+}
 
 // Mock данные для разных post_id
 const mockChannelsWithReachByPostId: Record<string, ChannelWithReach[]> = {
@@ -92,14 +91,27 @@ const mockChannelsWithReachByPostId: Record<string, ChannelWithReach[]> = {
   ],
 };
 
-const mockChannelsEmpty: Channel[] = [];
+let channelsPromise: Promise<Channel[]> | null = null;
 
 export const channelApi = {
-  getChannels(): Promise<Channel[]> {
-    return new Promise((resolve) => {
-      setTimeout(() => resolve(mockChannels), 300);
+  async getChannels(): Promise<Channel[]> {
+    if (channelsPromise) return channelsPromise;
+    const p = (async () => {
+      const res = await fetchWithAuth(CHANNELS_URL, { method: "GET" });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Ошибка загрузки каналов: ${res.status}`);
+      }
+      const json = (await res.json()) as UserChannelsListResponse;
+      return json.channels.map(mapChannel);
+    })();
+    channelsPromise = p;
+    p.finally(() => {
+      channelsPromise = null;
     });
+    return p;
   },
+
   getChannelsWithReach(postId: string): Promise<ChannelWithReach[]> {
     return new Promise((resolve, reject) => {
       setTimeout(() => {

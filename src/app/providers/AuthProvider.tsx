@@ -25,8 +25,6 @@ let initialLoginStarted = false;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({
-    accessToken: null,
-    refreshToken: null,
     isAuthenticated: false,
     isLoading: true,
     error: null,
@@ -49,8 +47,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { access_token, refresh_token } = await authApi.login(initData);
       tokenStorage.setTokens(access_token, refresh_token);
       setState({
-        accessToken: access_token,
-        refreshToken: refresh_token,
         isAuthenticated: true,
         isLoading: false,
         error: null,

@@ -1,300 +1,61 @@
-import type { ChannelStats } from "./types";
+import { API_BASE_URL } from "@/shared/config/api";
+import { fetchWithAuth } from "@/shared/api/client";
+import type { ChannelStats, ChannelStatsResponse } from "./types";
 
-const mockStatsByChannelId: Record<string, ChannelStats> = {
-  ch_123: {
+function statisticsUrl(channelId: string): string {
+  return `${API_BASE_URL}/max/channels/${channelId}/statistics`;
+}
+
+function mapStatsResponse(raw: ChannelStatsResponse): ChannelStats {
+  const r = raw.overview.reach;
+  return {
     summary: {
-      period: { from: "2025-01-19", to: "2025-02-19" },
-      totalSubscribers: 142698,
+      period: {
+        from: raw.summary.period.fromDate,
+        to: raw.summary.period.toDate,
+      },
+      totalSubscribers: raw.summary.totalSubscribers,
     },
     overview: {
       reach: {
-        last24hours: {
-          count: 2800,
-          er: 3,
-        }, // за 24 часа
-        last48hours: {
-          count: 3800,
-          er: 33,
-        }, // за 48 часов
-        last72hours: {
-          count: 24300,
-          er: 32,
-        },
+        last24hours: { count: r.last24hours.count ?? 0, er: r.last24hours.er ?? 0 },
+        last48hours: { count: r.last48hours.count ?? 0, er: r.last48hours.er ?? 0 },
+        last72hours: { count: r.last72hours.count ?? 0, er: r.last72hours.er ?? 0 },
       },
-      today: { subscribed: 1200, unsubscribed: 300 },
-      month: { subscribed: 14270, unsubscribed: 4270 },
+      today: raw.overview.today,
+      month: raw.overview.month,
     },
-    growthChart: {
-      points: [
-        { date: "2025-01-01", totalSubscribers: 143000 },
-        { date: "2025-01-02", totalSubscribers: 142980 },
-        { date: "2025-01-03", totalSubscribers: 142960 },
-        { date: "2025-01-04", totalSubscribers: 142940 },
-        { date: "2025-01-05", totalSubscribers: 142920 },
-        { date: "2025-01-06", totalSubscribers: 142900 },
-        { date: "2025-01-07", totalSubscribers: 142880 },
-        { date: "2025-01-08", totalSubscribers: 142860 },
-        { date: "2025-01-09", totalSubscribers: 142840 },
-        { date: "2025-01-10", totalSubscribers: 142820 },
-        { date: "2025-01-11", totalSubscribers: 142810 },
-        { date: "2025-01-12", totalSubscribers: 142800 },
-        { date: "2025-01-13", totalSubscribers: 142790 },
-        { date: "2025-01-14", totalSubscribers: 142780 },
-        { date: "2025-01-15", totalSubscribers: 142770 },
-        { date: "2025-01-16", totalSubscribers: 142760 },
-        { date: "2025-01-17", totalSubscribers: 142750 },
-        { date: "2025-01-18", totalSubscribers: 142740 },
-        { date: "2025-01-19", totalSubscribers: 142730 },
-        { date: "2025-01-20", totalSubscribers: 142698 },
-      ],
-    },
-    subscribersChart: {
-      points: [
-        { date: "2025-01-01", subscribed: 1200, unsubscribed: 700 },
-        { date: "2025-01-02", subscribed: 1100, unsubscribed: 650 },
-        { date: "2025-01-03", subscribed: 900, unsubscribed: 600 },
-        { date: "2025-01-04", subscribed: 1000, unsubscribed: 620 },
-        { date: "2025-01-05", subscribed: 1300, unsubscribed: 700 },
-        { date: "2025-01-06", subscribed: 1400, unsubscribed: 750 },
-        { date: "2025-01-07", subscribed: 1500, unsubscribed: 800 },
-        { date: "2025-01-08", subscribed: 1100, unsubscribed: 700 },
-        { date: "2025-01-09", subscribed: 900, unsubscribed: 650 },
-        { date: "2025-01-10", subscribed: 1000, unsubscribed: 700 },
-        { date: "2025-01-11", subscribed: 1200, unsubscribed: 720 },
-        { date: "2025-01-12", subscribed: 1300, unsubscribed: 750 },
-        { date: "2025-01-13", subscribed: 1400, unsubscribed: 780 },
-        { date: "2025-01-14", subscribed: 1500, unsubscribed: 800 },
-        { date: "2025-01-15", subscribed: 1600, unsubscribed: 820 },
-        { date: "2025-01-16", subscribed: 1700, unsubscribed: 850 },
-        { date: "2025-01-17", subscribed: 1650, unsubscribed: 840 },
-        { date: "2025-01-18", subscribed: 1750, unsubscribed: 860 },
-        { date: "2025-01-19", subscribed: 1800, unsubscribed: 900 },
-        { date: "2025-01-20", subscribed: 1850, unsubscribed: 920 },
-      ],
-    },
+    growthChart: raw.growthChart,
+    subscribersChart: raw.subscribersChart,
     reachChart: {
       points: {
-        last24hours: [
-          { date: "2025-01-18T00:00:00Z", reach: 600 },
-          { date: "2025-01-18T02:00:00Z", reach: 650 },
-          { date: "2025-01-18T04:00:00Z", reach: 700 },
-          { date: "2025-01-18T06:00:00Z", reach: 750 },
-          { date: "2025-01-18T08:00:00Z", reach: 800 },
-          { date: "2025-01-18T10:00:00Z", reach: 850 },
-          { date: "2025-01-18T12:00:00Z", reach: 900 },
-          { date: "2025-01-18T14:00:00Z", reach: 950 },
-          { date: "2025-01-18T16:00:00Z", reach: 1000 },
-          { date: "2025-01-18T18:00:00Z", reach: 1050 },
-          { date: "2025-01-18T20:00:00Z", reach: 1100 },
-          { date: "2025-01-18T22:00:00Z", reach: 1150 },
-          { date: "2025-01-19T00:00:00Z", reach: 1200 },
-          { date: "2025-01-19T02:00:00Z", reach: 1300 },
-          { date: "2025-01-19T04:00:00Z", reach: 1400 },
-          { date: "2025-01-19T06:00:00Z", reach: 1500 },
-          { date: "2025-01-19T08:00:00Z", reach: 1600 },
-          { date: "2025-01-19T10:00:00Z", reach: 1700 },
-          { date: "2025-01-19T12:00:00Z", reach: 1800 },
-          { date: "2025-01-19T14:00:00Z", reach: 1900 },
-        ],
-        last48hours: [
-          { date: "2025-01-18T00:00:00Z", reach: 600 },
-          { date: "2025-01-18T02:00:00Z", reach: 650 },
-          { date: "2025-01-18T04:00:00Z", reach: 700 },
-          { date: "2025-01-18T06:00:00Z", reach: 750 },
-          { date: "2025-01-18T08:00:00Z", reach: 800 },
-          { date: "2025-01-18T10:00:00Z", reach: 850 },
-          { date: "2025-01-18T12:00:00Z", reach: 900 },
-          { date: "2025-01-18T14:00:00Z", reach: 950 },
-          { date: "2025-01-18T16:00:00Z", reach: 1000 },
-          { date: "2025-01-18T18:00:00Z", reach: 1050 },
-          { date: "2025-01-18T20:00:00Z", reach: 1100 },
-          { date: "2025-01-18T22:00:00Z", reach: 1150 },
-          { date: "2025-01-19T00:00:00Z", reach: 1200 },
-          { date: "2025-01-19T02:00:00Z", reach: 1300 },
-          { date: "2025-01-19T04:00:00Z", reach: 1400 },
-          { date: "2025-01-19T06:00:00Z", reach: 1500 },
-          { date: "2025-01-19T08:00:00Z", reach: 1600 },
-          { date: "2025-01-19T10:00:00Z", reach: 1700 },
-          { date: "2025-01-19T12:00:00Z", reach: 1800 },
-          { date: "2025-01-19T14:00:00Z", reach: 1900 },
-        ],
-        last72hours: [
-          { date: "2025-01-18T00:00:00Z", reach: 600 },
-          { date: "2025-01-18T02:00:00Z", reach: 650 },
-          { date: "2025-01-18T04:00:00Z", reach: 700 },
-          { date: "2025-01-18T06:00:00Z", reach: 750 },
-          { date: "2025-01-18T08:00:00Z", reach: 800 },
-          { date: "2025-01-18T10:00:00Z", reach: 850 },
-          { date: "2025-01-18T12:00:00Z", reach: 900 },
-          { date: "2025-01-18T14:00:00Z", reach: 950 },
-          { date: "2025-01-18T16:00:00Z", reach: 1000 },
-          { date: "2025-01-18T18:00:00Z", reach: 1050 },
-          { date: "2025-01-18T20:00:00Z", reach: 1100 },
-          { date: "2025-01-18T22:00:00Z", reach: 1150 },
-          { date: "2025-01-19T00:00:00Z", reach: 1200 },
-          { date: "2025-01-19T02:00:00Z", reach: 1300 },
-          { date: "2025-01-19T04:00:00Z", reach: 1400 },
-          { date: "2025-01-19T06:00:00Z", reach: 1500 },
-          { date: "2025-01-19T08:00:00Z", reach: 1600 },
-          { date: "2025-01-19T10:00:00Z", reach: 1700 },
-          { date: "2025-01-19T12:00:00Z", reach: 1800 },
-          { date: "2025-01-19T14:00:00Z", reach: 1900 },
-        ],
+        last24hours: raw.reachChart.last24hours,
+        last48hours: raw.reachChart.last48hours,
+        last72hours: raw.reachChart.last72hours,
       },
     },
-  },
-  ch_122: {
-    summary: {
-      period: { from: "2025-01-19", to: "2025-02-19" },
-      totalSubscribers: 70,
-    },
-    overview: {
-      reach: {
-        last24hours: {
-          count: 2800,
-          er: 33,
-        }, // за 24 часа
-        last48hours: {
-          count: 10800,
-          er: 29,
-        }, // за 48 часов
-        last72hours: {
-          count: 108000,
-          er: 37,
-        },
-      },
-      today: { subscribed: 1200, unsubscribed: 300 },
-      month: { subscribed: 14270, unsubscribed: 4270 },
-    },
-    growthChart: {
-      points: [
-        { date: "2025-01-01", totalSubscribers: 143000 },
-        { date: "2025-01-02", totalSubscribers: 142980 },
-        { date: "2025-01-03", totalSubscribers: 142960 },
-        { date: "2025-01-04", totalSubscribers: 142940 },
-        { date: "2025-01-05", totalSubscribers: 142920 },
-        { date: "2025-01-06", totalSubscribers: 142900 },
-        { date: "2025-01-07", totalSubscribers: 142880 },
-        { date: "2025-01-08", totalSubscribers: 142860 },
-        { date: "2025-01-09", totalSubscribers: 142840 },
-        { date: "2025-01-10", totalSubscribers: 142820 },
-        { date: "2025-01-11", totalSubscribers: 142810 },
-        { date: "2025-01-12", totalSubscribers: 142800 },
-        { date: "2025-01-13", totalSubscribers: 142790 },
-        { date: "2025-01-14", totalSubscribers: 142780 },
-        { date: "2025-01-15", totalSubscribers: 142770 },
-        { date: "2025-01-16", totalSubscribers: 142760 },
-        { date: "2025-01-17", totalSubscribers: 142750 },
-        { date: "2025-01-18", totalSubscribers: 142740 },
-        { date: "2025-01-19", totalSubscribers: 142730 },
-        { date: "2025-01-20", totalSubscribers: 142698 },
-      ],
-    },
-    subscribersChart: {
-      points: [
-        { date: "2025-01-01", subscribed: 1200, unsubscribed: 700 },
-        { date: "2025-01-02", subscribed: 1100, unsubscribed: 650 },
-        { date: "2025-01-03", subscribed: 900, unsubscribed: 600 },
-        { date: "2025-01-04", subscribed: 1000, unsubscribed: 620 },
-        { date: "2025-01-05", subscribed: 1300, unsubscribed: 700 },
-        { date: "2025-01-06", subscribed: 1400, unsubscribed: 750 },
-        { date: "2025-01-07", subscribed: 1500, unsubscribed: 800 },
-        { date: "2025-01-08", subscribed: 1100, unsubscribed: 700 },
-        { date: "2025-01-09", subscribed: 900, unsubscribed: 650 },
-        { date: "2025-01-10", subscribed: 1000, unsubscribed: 700 },
-        { date: "2025-01-11", subscribed: 1200, unsubscribed: 720 },
-        { date: "2025-01-12", subscribed: 1300, unsubscribed: 750 },
-        { date: "2025-01-13", subscribed: 1400, unsubscribed: 780 },
-        { date: "2025-01-14", subscribed: 1500, unsubscribed: 800 },
-        { date: "2025-01-15", subscribed: 1600, unsubscribed: 820 },
-        { date: "2025-01-16", subscribed: 1700, unsubscribed: 850 },
-        { date: "2025-01-17", subscribed: 1650, unsubscribed: 840 },
-        { date: "2025-01-18", subscribed: 1750, unsubscribed: 860 },
-        { date: "2025-01-19", subscribed: 1800, unsubscribed: 900 },
-        { date: "2025-01-20", subscribed: 1850, unsubscribed: 920 },
-      ],
-    },
-    reachChart: {
-      points: {
-        last24hours: [
-          { date: "2025-01-18T00:00:00Z", reach: 600 },
-          { date: "2025-01-18T02:00:00Z", reach: 650 },
-          { date: "2025-01-18T04:00:00Z", reach: 700 },
-          { date: "2025-01-18T06:00:00Z", reach: 750 },
-          { date: "2025-01-18T08:00:00Z", reach: 800 },
-          { date: "2025-01-18T10:00:00Z", reach: 850 },
-          { date: "2025-01-18T12:00:00Z", reach: 900 },
-          { date: "2025-01-18T14:00:00Z", reach: 950 },
-          { date: "2025-01-18T16:00:00Z", reach: 1000 },
-          { date: "2025-01-18T18:00:00Z", reach: 1050 },
-          { date: "2025-01-18T20:00:00Z", reach: 1100 },
-          { date: "2025-01-18T22:00:00Z", reach: 1150 },
-          { date: "2025-01-19T00:00:00Z", reach: 1200 },
-          { date: "2025-01-19T02:00:00Z", reach: 1300 },
-          { date: "2025-01-19T04:00:00Z", reach: 1400 },
-          { date: "2025-01-19T06:00:00Z", reach: 1500 },
-          { date: "2025-01-19T08:00:00Z", reach: 1600 },
-          { date: "2025-01-19T10:00:00Z", reach: 1700 },
-          { date: "2025-01-19T12:00:00Z", reach: 1800 },
-          { date: "2025-01-19T14:00:00Z", reach: 1900 },
-        ],
-        last48hours: [
-          { date: "2025-01-18T00:00:00Z", reach: 600 },
-          { date: "2025-01-18T02:00:00Z", reach: 650 },
-          { date: "2025-01-18T04:00:00Z", reach: 700 },
-          { date: "2025-01-18T06:00:00Z", reach: 750 },
-          { date: "2025-01-18T08:00:00Z", reach: 800 },
-          { date: "2025-01-18T10:00:00Z", reach: 850 },
-          { date: "2025-01-18T12:00:00Z", reach: 900 },
-          { date: "2025-01-18T14:00:00Z", reach: 950 },
-          { date: "2025-01-18T16:00:00Z", reach: 1000 },
-          { date: "2025-01-18T18:00:00Z", reach: 1050 },
-          { date: "2025-01-18T20:00:00Z", reach: 1100 },
-          { date: "2025-01-18T22:00:00Z", reach: 1150 },
-          { date: "2025-01-19T00:00:00Z", reach: 1200 },
-          { date: "2025-01-19T02:00:00Z", reach: 1300 },
-          { date: "2025-01-19T04:00:00Z", reach: 1400 },
-          { date: "2025-01-19T06:00:00Z", reach: 1500 },
-          { date: "2025-01-19T08:00:00Z", reach: 1600 },
-          { date: "2025-01-19T10:00:00Z", reach: 1700 },
-          { date: "2025-01-19T12:00:00Z", reach: 1800 },
-          { date: "2025-01-19T14:00:00Z", reach: 1900 },
-        ],
-        last72hours: [
-          { date: "2025-01-18T00:00:00Z", reach: 600 },
-          { date: "2025-01-18T02:00:00Z", reach: 650 },
-          { date: "2025-01-18T04:00:00Z", reach: 700 },
-          { date: "2025-01-18T06:00:00Z", reach: 750 },
-          { date: "2025-01-18T08:00:00Z", reach: 800 },
-          { date: "2025-01-18T10:00:00Z", reach: 850 },
-          { date: "2025-01-18T12:00:00Z", reach: 900 },
-          { date: "2025-01-18T14:00:00Z", reach: 950 },
-          { date: "2025-01-18T16:00:00Z", reach: 1000 },
-          { date: "2025-01-18T18:00:00Z", reach: 1050 },
-          { date: "2025-01-18T20:00:00Z", reach: 1100 },
-          { date: "2025-01-18T22:00:00Z", reach: 1150 },
-          { date: "2025-01-19T00:00:00Z", reach: 1200 },
-          { date: "2025-01-19T02:00:00Z", reach: 1300 },
-          { date: "2025-01-19T04:00:00Z", reach: 1400 },
-          { date: "2025-01-19T06:00:00Z", reach: 1500 },
-          { date: "2025-01-19T08:00:00Z", reach: 1600 },
-          { date: "2025-01-19T10:00:00Z", reach: 1700 },
-          { date: "2025-01-19T12:00:00Z", reach: 1800 },
-          { date: "2025-01-19T14:00:00Z", reach: 1900 },
-        ],
-      },
-    },
-  },
-};
+  };
+}
+
+const statsPromises: Record<string, Promise<ChannelStats>> = {};
 
 export const statsApi = {
-  getChannelStats(channelId: string): Promise<ChannelStats> {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const stats = mockStatsByChannelId[channelId];
-        if (!stats) return reject(new Error("Stats not found"));
-        resolve(stats);
-      }, 300);
+  async getChannelStats(channelId: string): Promise<ChannelStats> {
+    if (statsPromises[channelId]) return statsPromises[channelId];
+    const url = statisticsUrl(channelId);
+    const p = (async () => {
+      const res = await fetchWithAuth(url, { method: "GET" });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Ошибка загрузки статистики: ${res.status}`);
+      }
+      const json = (await res.json()) as ChannelStatsResponse;
+      return mapStatsResponse(json);
+    })();
+    statsPromises[channelId] = p;
+    p.finally(() => {
+      delete statsPromises[channelId];
     });
+    return p;
   },
 };

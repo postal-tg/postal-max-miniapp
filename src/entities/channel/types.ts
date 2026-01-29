@@ -1,5 +1,23 @@
 export type ChannelId = string;
 
+/** Ответ GET /max/channels/webapp/channels */
+export type UserChannelsListResponse = {
+  channels: UserChannelStats[];
+};
+
+export type UserChannelStats = {
+  channelId: number;
+  title: string;
+  photo: string | null;
+  participantsCount: number;
+  channelUrl: string | null;
+  reach: {
+    last24Hours: number;
+    last48Hours: number;
+    last72Hours: number;
+  };
+};
+
 export type ChannelReach = {
   last24hours: {
     count: number;

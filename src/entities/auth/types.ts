@@ -4,8 +4,6 @@ export interface LoginResponse {
 }
 
 export interface AuthState {
-  accessToken: string | null;
-  refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;

@@ -68,3 +68,30 @@ export type ChannelStats = {
 };
 
 export type StatsRange = "24h" | "48h" | "72h";
+
+/** Ответ GET /max/channels/{channel_id}/statistics */
+export type ChannelStatsResponse = {
+  channelId: number;
+  title: string;
+  photo: string | null;
+  summary: {
+    period: { fromDate: string; toDate: string };
+    totalSubscribers: number;
+  };
+  overview: {
+    reach: {
+      last24hours: { count?: number; er?: number };
+      last48hours: { count?: number; er?: number };
+      last72hours: { count?: number; er?: number };
+    };
+    today: { subscribed: number; unsubscribed: number };
+    month: { subscribed: number; unsubscribed: number };
+  };
+  growthChart: { points: GrowthPoint[] };
+  subscribersChart: { points: SubscribersPoint[] };
+  reachChart: {
+    last24hours: ReachPoint[];
+    last48hours: ReachPoint[];
+    last72hours: ReachPoint[];
+  };
+};
