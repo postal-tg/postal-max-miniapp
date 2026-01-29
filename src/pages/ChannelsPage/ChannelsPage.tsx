@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/app/providers/AuthProvider";
 import { channelApi } from "../../entities/channel/api";
 import type { Channel } from "../../entities/channel/types";
-import "./ChannelsPage.css";
 import { Loader } from "@/shared/ui/Loader/Loader";
+import "./ChannelsPage.css";
 
 export function ChannelsPage() {
+  const { isLoading: authLoading, error: authError, retry } = useAuth();
   const [channels, setChannels] = useState<Channel[]>([]);
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -14,6 +16,7 @@ export function ChannelsPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (authLoading || authError) return;
     setIsLoading(true);
     channelApi
       .getChannels()
@@ -23,7 +26,7 @@ export function ChannelsPage() {
       })
       .catch((e) => setError(e.message ?? "Failed to load channels"))
       .finally(() => setIsLoading(false));
-  }, []);
+  }, [authLoading, authError]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -37,6 +40,17 @@ export function ChannelsPage() {
     });
   };
 
+  if (authLoading || isLoading) return <Loader />;
+  if (authError)
+    return (
+      <div className="channels-page">
+        <div className="channels-status channels-status_error">{authError}</div>
+        <button type="button" className="channels-retry" onClick={retry}>
+          Повторить
+        </button>
+      </div>
+    );
+
   return (
     <div className="channels-page">
       <header className="channels-header">
@@ -49,10 +63,9 @@ export function ChannelsPage() {
         />
       </header>
 
-      {isLoading && <Loader />}
       {error && <div className="channels-status channels-status_error">{error}</div>}
 
-      {!isLoading && !error && filtered.length === 0 && (
+      {!error && filtered.length === 0 && (
         <div className="channels-empty">
           <div className="channels-empty-title">У вас пока нет ни 1 канала</div>
           <div className="channels-empty-text">
@@ -61,7 +74,7 @@ export function ChannelsPage() {
         </div>
       )}
 
-      {!isLoading && !error && filtered.length > 0 && (
+      {!error && filtered.length > 0 && (
         <ul className="channels-list">
           {filtered.map((channel) => (
             <li

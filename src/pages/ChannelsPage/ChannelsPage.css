@@ -41,6 +41,22 @@
   color: #b91c1c;
 }
 
+.channels-retry {
+  margin-top: 12px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  background: #2b79d6;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.channels-retry:hover {
+  background: #2369b8;
+}
+
 .channels-list {
   list-style: none;
   padding: 0;
