@@ -5,12 +5,23 @@
 
   color-scheme: light dark;
   color: #222222;
-  background-color: #242424;
+  background-color: #f3f4f6;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body {
+  height: 100%;
+  background-color: #f3f4f6;
+}
+
+#root {
+  min-height: 100%;
+  background-color: #f3f4f6;
 }
 
 * {

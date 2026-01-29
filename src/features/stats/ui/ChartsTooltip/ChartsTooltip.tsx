@@ -1,4 +1,4 @@
-import { formatRuWeekdayShortDate, formatTimeHHmm } from "@/shared/utils/formatDate";
+import { formatRuWeekdayShortDate } from "@/shared/utils/formatDate";
 
 import "./ChartsTooltip.css";
 

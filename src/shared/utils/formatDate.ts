@@ -43,13 +43,3 @@ export function formatRuWeekdayShortDate(input: string | number | Date): string 
     .replace(".,", ",") // убираем точку после месяца перед запятой
     .replace(".", ""); // убираем оставшиеся точки → "ср, 4 дек 2025"
 }
-
-export function formatTimeHHmm(input: string | number | Date): string {
-  const date = new Date(input);
-
-  return date.toLocaleTimeString("ru-RU", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }); // вернёт например "18:30" [web:140][web:127]
-}

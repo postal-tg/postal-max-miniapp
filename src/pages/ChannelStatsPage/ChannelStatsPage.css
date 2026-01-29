@@ -321,3 +321,19 @@
 .stats-status_error {
   color: #b91c1c;
 }
+
+.stats-retry {
+  margin-top: 12px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  background: #2b79d6;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.stats-retry:hover {
+  background: #2369b8;
+}

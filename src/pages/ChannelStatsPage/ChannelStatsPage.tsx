@@ -2,8 +2,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { ResponsiveContainer } from "recharts";
-import { statsApi } from "@/entities/stats/api";
-import type { ChannelStats, StatsRange } from "@/entities/stats/types";
+import { useChannelStats } from "@/app/providers/StatsProvider";
+import type { StatsRange } from "@/entities/stats/types";
 import "./ChannelStatsPage.css";
 import { formatRuShortDate } from "@/shared/utils/formatDate";
 import { GrowthTooltip } from "@/features/stats/ui/GrowthTooltip/GrowthTooltip";
@@ -28,11 +28,9 @@ const REACH_CONFIG = {
 export function ChannelStatsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { stats, isLoading, error, refetch } = useChannelStats(id);
 
   const [range, setRange] = useState<StatsRange>("24h");
-  const [stats, setStats] = useState<ChannelStats | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [onSubsribers, setOnSubscribers] = useState(true);
   const [onUnsubsribers, setOnUnsubscribers] = useState(true);
   const [chartLines, setChartLines] = useState<LineDef[]>([]);
@@ -41,19 +39,6 @@ export function ChannelStatsPage() {
   const state = location.state as { title: string; avatarUrl: string } | null;
   const channelTitle = state?.title ?? "Канал";
   const channelAvatarUrl = state?.avatarUrl ?? null;
-
-  useEffect(() => {
-    if (!id) return;
-    setIsLoading(true);
-    statsApi
-      .getChannelStats(id)
-      .then((data) => {
-        setStats(data);
-        setError(null);
-      })
-      .catch((e) => setError(e.message ?? "Failed to load stats"))
-      .finally(() => setIsLoading(false));
-  }, [id]);
 
   useEffect(() => {
     const lines = [];
@@ -87,7 +72,14 @@ export function ChannelStatsPage() {
       </div>
 
       {isLoading && <Loader />}
-      {error && <div className="stats-status stats-status_error">{error}</div>}
+      {error && (
+        <>
+          <div className="stats-status stats-status_error">{error}</div>
+          <button type="button" className="stats-retry" onClick={refetch}>
+            Повторить
+          </button>
+        </>
+      )}
 
       {stats && !isLoading && !error && (
         <div className="stats-container">
