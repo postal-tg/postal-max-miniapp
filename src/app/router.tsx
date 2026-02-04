@@ -23,8 +23,10 @@ function LandingRedirect() {
 }
 
 export function AppRouter() {
+  const basename = import.meta.env.VITE_BASE_URL || '/';
+  
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={basename}>
       <AuthProvider>
         <Routes>
           <Route path="/" element={<LandingRedirect />} />
