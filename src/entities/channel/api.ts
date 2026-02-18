@@ -1,5 +1,6 @@
-import { API_BASE_URL } from "@/shared/config/api";
+import { API_BASE_URL, USE_MOCK } from "@/shared/config/api";
 import { fetchWithAuth } from "@/shared/api/client";
+import { mockChannels, mockChannelsWithReach } from "@/shared/mocks/data";
 import type { Channel, ChannelWithReach, UserChannelsListResponse } from "./types";
 
 const CHANNELS_URL = `${API_BASE_URL}/max/channels/webapp/channels`;
@@ -32,6 +33,7 @@ let channelsPromise: Promise<Channel[]> | null = null;
 
 export const channelApi = {
   async getChannels(): Promise<Channel[]> {
+    if (USE_MOCK) return Promise.resolve(mockChannels);
     if (channelsPromise) return channelsPromise;
     const p = (async () => {
       const res = await fetchWithAuth(CHANNELS_URL, { method: "GET" });
@@ -50,6 +52,7 @@ export const channelApi = {
   },
 
   async getChannelsWithReach(postUuid: string): Promise<ChannelWithReach[]> {
+    if (USE_MOCK) return Promise.resolve(mockChannelsWithReach);
     const url = `${CHANNELS_URL}/post/${encodeURIComponent(postUuid)}`;
     const res = await fetchWithAuth(url, { method: "GET" });
     if (!res.ok) {

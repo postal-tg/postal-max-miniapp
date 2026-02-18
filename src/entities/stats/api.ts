@@ -1,5 +1,6 @@
-import { API_BASE_URL } from "@/shared/config/api";
+import { API_BASE_URL, USE_MOCK } from "@/shared/config/api";
 import { fetchWithAuth } from "@/shared/api/client";
+import { getMockChannelStats } from "@/shared/mocks/data";
 import type { ChannelStats, ChannelStatsResponse } from "./types";
 
 function statisticsUrl(channelId: string): string {
@@ -41,7 +42,9 @@ const statsPromises: Record<string, Promise<ChannelStats>> = {};
 
 export const statsApi = {
   async getChannelStats(channelId: string): Promise<ChannelStats> {
-    if (statsPromises[channelId]) return statsPromises[channelId];
+    if (USE_MOCK) return Promise.resolve(getMockChannelStats(channelId));
+    const cached = statsPromises[channelId];
+    if (cached !== undefined) return cached;
     const url = statisticsUrl(channelId);
     const p = (async () => {
       const res = await fetchWithAuth(url, { method: "GET" });

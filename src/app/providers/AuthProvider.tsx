@@ -10,6 +10,7 @@ import {
 import { authApi } from "@/entities/auth/api";
 import { tokenStorage } from "@/entities/auth/tokenStorage";
 import type { AuthState } from "@/entities/auth/types";
+import { USE_MOCK } from "@/shared/config/api";
 
 type AuthContextValue = AuthState & {
   retry: () => void;
@@ -33,13 +34,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const performLogin = useCallback(async () => {
     tokenStorage.clear();
 
+    if (USE_MOCK) {
+      tokenStorage.setTokens("mock_access_token", "mock_refresh_token");
+      setState({
+        isAuthenticated: true,
+        isLoading: false,
+        error: null,
+      });
+      return;
+    }
+
     const initData = getInitData();
     if (!initData) {
-      setState((s) => ({
-        ...s,
-        isLoading: false,
-        error: "WebApp initData недоступен. Запустите приложение из Max.",
-      }));
+      if (USE_MOCK) {
+        tokenStorage.setTokens("mock_access_token", "mock_refresh_token");
+        setState({ isAuthenticated: true, isLoading: false, error: null });
+      } else {
+        setState((s) => ({
+          ...s,
+          isLoading: false,
+          error: "WebApp initData недоступен. Запустите приложение из Max.",
+        }));
+      }
       return;
     }
 
