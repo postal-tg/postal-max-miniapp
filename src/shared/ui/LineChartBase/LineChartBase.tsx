@@ -48,7 +48,11 @@ export function LineChartBase<T extends object>({ data, lines, tooltipContent, x
           domain={["dataMin", "dataMax"]}
           width={"auto"}
         />
-        {tooltipContent ? <Tooltip content={tooltipContent} wrapperStyle={{ marginTop: -20 }} /> : <Tooltip wrapperStyle={{ marginTop: -20 }} />}
+        {tooltipContent ? (
+          <Tooltip content={tooltipContent} position={{ y: 0 }} />
+        ) : (
+          <Tooltip position={{ y: 0 }} />
+        )}
         {lines.map((line) => (
           <Line
             key={line.dataKey}

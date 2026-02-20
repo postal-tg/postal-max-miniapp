@@ -19,15 +19,13 @@ export function ChartsTooltip({ active, label, payload }: ChartsTooltipProps) {
   const item = payload[0];
 
   return (
-    <div style={{ transform: "translateY(-20px)" }}>
-      <div className="tooltip">
-        <div className="tooltip-row">
-          <div className="tooltip-date">{formatRuWeekdayShortDate(label as string)}</div>
-        </div>
-        <div className="tooltip-row">
-          <span className="tooltip-label">Охват</span>
-          <span className="tooltip-value">{Number(item.payload?.reach).toLocaleString("ru-RU")}</span>
-        </div>
+    <div className="tooltip">
+      <div className="tooltip-row">
+        <div className="tooltip-date">{formatRuWeekdayShortDate(label as string)}</div>
+      </div>
+      <div className="tooltip-row">
+        <span className="tooltip-label">Охват</span>
+        <span className="tooltip-value">{Number(item.payload?.reach).toLocaleString("ru-RU")}</span>
       </div>
     </div>
   );
