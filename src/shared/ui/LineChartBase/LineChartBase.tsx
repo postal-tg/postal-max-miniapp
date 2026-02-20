@@ -28,7 +28,7 @@ type Props<T extends object> = {
 export function LineChartBase<T extends object>({ data, lines, tooltipContent, xTicks }: Props<T>) {
   return (
     <ResponsiveContainer width="100%" height={180}>
-      <LineChart data={data}>
+      <LineChart data={data} margin={{ top: 50 }}>
         <CartesianGrid stroke="#e5e7eb" strokeDasharray="3 3" vertical={false} />
         <XAxis
           dataKey="date"
