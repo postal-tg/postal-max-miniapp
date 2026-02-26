@@ -6,7 +6,7 @@ const avatar = "https://ui-avatars.com/api/?name=Mock+Channel&background=0D8ABC&
 export const mockChannels: Channel[] = [
   {
     id: "1",
-    title: "Тестовый канал 1",
+    title: "Тестовый канал 1 - татарские новости в Новгороде",
     avatarUrl: avatar,
     subscribersCount: 12500,
   },
@@ -34,7 +34,10 @@ function makeReachPoints(days: number, baseReach: number): { date: string; reach
   }));
 }
 
-function makeGrowthPoints(days: number, totalSubscribers: number): { date: string; totalSubscribers: number }[] {
+function makeGrowthPoints(
+  days: number,
+  totalSubscribers: number
+): { date: string; totalSubscribers: number }[] {
   let current = totalSubscribers - days * 50;
   return Array.from({ length: days }, (_, i) => {
     current += 30 + Math.floor(Math.random() * 40);
@@ -45,7 +48,9 @@ function makeGrowthPoints(days: number, totalSubscribers: number): { date: strin
   });
 }
 
-function makeSubscribersPoints(days: number): { date: string; subscribed: number; unsubscribed: number }[] {
+function makeSubscribersPoints(
+  days: number
+): { date: string; subscribed: number; unsubscribed: number }[] {
   return Array.from({ length: days }, (_, i) => ({
     date: new Date(Date.now() - (days - 1 - i) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
     subscribed: 20 + Math.floor(Math.random() * 60),

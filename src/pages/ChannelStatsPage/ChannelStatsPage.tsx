@@ -64,10 +64,10 @@ export function ChannelStatsPage() {
           <span>Назад</span>
         </button>
         <div className="stats-top-right">
+          <div className="stats-top-title">{channelTitle}</div>
           {channelAvatarUrl && (
             <img src={channelAvatarUrl} alt={channelTitle} className="stats-top-avatar" />
           )}
-          <div className="stats-top-title">{channelTitle}</div>
         </div>
       </div>
 
