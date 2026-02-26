@@ -6,6 +6,7 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
+  ReferenceLine,
 } from "recharts";
 import { formatRuShortDateNoYear } from "@/shared/utils/formatDate";
 import type { ContentType } from "recharts/types/component/Tooltip";
@@ -26,6 +27,8 @@ type Props<T extends object> = {
 };
 
 export function LineChartBase<T extends object>({ data, lines, tooltipContent, xTicks }: Props<T>) {
+  const hasSinglePoint = data.length === 1;
+
   return (
     <ResponsiveContainer width="100%" height={180}>
       <LineChart data={data} margin={{ top: 50 }}>
@@ -53,17 +56,36 @@ export function LineChartBase<T extends object>({ data, lines, tooltipContent, x
         ) : (
           <Tooltip position={{ y: 0 }} />
         )}
-        {lines.map((line) => (
-          <Line
-            key={line.dataKey}
-            type="linear"
-            dataKey={line.dataKey}
-            stroke={line.color}
-            strokeWidth={2}
-            dot={false}
-            isAnimationActive={false}
-          />
-        ))}
+        {hasSinglePoint
+          ? lines.map((line) => {
+              const point = data[0] as Record<string, number | string | null | undefined>;
+              const rawValue = point[line.dataKey];
+
+              if (typeof rawValue !== "number") {
+                return null;
+              }
+
+              return (
+                <ReferenceLine
+                  key={line.dataKey}
+                  y={rawValue}
+                  stroke={line.color}
+                  strokeWidth={2}
+                  ifOverflow="extendDomain"
+                />
+              );
+            })
+          : lines.map((line) => (
+              <Line
+                key={line.dataKey}
+                type="linear"
+                dataKey={line.dataKey}
+                stroke={line.color}
+                strokeWidth={2}
+                dot={false}
+                isAnimationActive={false}
+              />
+            ))}
       </LineChart>
     </ResponsiveContainer>
   );

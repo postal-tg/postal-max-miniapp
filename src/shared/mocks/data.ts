@@ -77,7 +77,7 @@ export function getMockChannelStats(_channelId: string): ChannelStats {
       month: { subscribed: 890, unsubscribed: 120 },
     },
     growthChart: {
-      points: makeGrowthPoints(30, 12500),
+      points: makeGrowthPoints(1, 12500),
     },
     subscribersChart: {
       points: makeSubscribersPoints(30),
