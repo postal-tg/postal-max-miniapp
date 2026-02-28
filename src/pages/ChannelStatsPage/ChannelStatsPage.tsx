@@ -175,6 +175,7 @@ export function ChannelStatsPage() {
                 <LineChartBase
                   data={stats.growthChart.points}
                   lines={[{ dataKey: "totalSubscribers", color: "#3b82f6" }]}
+                  period={stats.summary.period}
                   tooltipContent={<GrowthTooltip />}
                 />
               </ResponsiveContainer>
@@ -195,6 +196,7 @@ export function ChannelStatsPage() {
                 <LineChartBase
                   data={stats.subscribersChart.points}
                   lines={chartLines}
+                  period={stats.summary.period}
                   tooltipContent={<SubscribersTooltip />}
                 />
               </ResponsiveContainer>
@@ -233,6 +235,7 @@ export function ChannelStatsPage() {
                 <LineChartBase
                   data={stats.reachChart.points[REACH_CONFIG[range].statsKey]}
                   lines={[{ dataKey: "reach", color: "#3b82f6" }]}
+                  period={stats.summary.period}
                   tooltipContent={<ChartsTooltip />}
                 />
               </ResponsiveContainer>

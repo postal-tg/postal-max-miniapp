@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   LineChart,
   Line,
@@ -22,16 +23,48 @@ type LineDef = {
 type Props<T extends object> = {
   data: T[];
   lines: LineDef[];
+  period?: { from: string; to: string };
   tooltipContent?: ContentType<ValueType, NameType>;
   xTicks?: (string | number)[];
 };
 
-export function LineChartBase<T extends object>({ data, lines, tooltipContent, xTicks }: Props<T>) {
-  const hasSinglePoint = data.length === 1;
+function getMidpointDate(from: string, to: string): string {
+  const fromTime = new Date(from).getTime();
+  const toTime = new Date(to).getTime();
+  const midTime = (fromTime + toTime) / 2;
+  return new Date(midTime).toISOString().slice(0, 10);
+}
+
+export function LineChartBase<T extends object>({
+  data,
+  lines,
+  period,
+  tooltipContent,
+  xTicks,
+}: Props<T>) {
+  const { chartData, xDomain, isSinglePoint } = useMemo(() => {
+    if (data.length !== 1) {
+      return { chartData: data, xDomain: undefined as [string, string] | undefined, isSinglePoint: false };
+    }
+    const point = data[0] as T & { date?: string };
+    if (period) {
+      const centerDate = getMidpointDate(period.from, period.to);
+      return {
+        chartData: [{ ...point, date: centerDate }] as T[],
+        xDomain: [period.from, period.to] as [string, string],
+        isSinglePoint: true,
+      };
+    }
+    return {
+      chartData: [point] as T[],
+      xDomain: undefined,
+      isSinglePoint: true,
+    };
+  }, [data, period]);
 
   return (
     <ResponsiveContainer width="100%" height={180}>
-      <LineChart data={data} margin={{ top: 50 }}>
+      <LineChart data={chartData} margin={{ top: 50 }}>
         <CartesianGrid stroke="#e5e7eb" strokeDasharray="3 3" vertical={false} />
         <XAxis
           dataKey="date"
@@ -39,6 +72,7 @@ export function LineChartBase<T extends object>({ data, lines, tooltipContent, x
           axisLine={false}
           tickMargin={6}
           ticks={xTicks}
+          domain={xDomain}
           tickFormatter={(value) => formatRuShortDateNoYear(value)}
           tick={{ fontSize: 8, fill: "#ababab" }}
         />
@@ -56,36 +90,33 @@ export function LineChartBase<T extends object>({ data, lines, tooltipContent, x
         ) : (
           <Tooltip position={{ y: 0 }} />
         )}
-        {hasSinglePoint
+        {isSinglePoint
           ? lines.map((line) => {
-              const point = data[0] as Record<string, number | string | null | undefined>;
-              const rawValue = point[line.dataKey];
-
-              if (typeof rawValue !== "number") {
-                return null;
-              }
-
+              const point = chartData[0] as Record<string, number | string | null | undefined>;
+              const value = point[line.dataKey];
+              if (typeof value !== "number") return null;
               return (
                 <ReferenceLine
                   key={line.dataKey}
-                  y={rawValue}
+                  y={value}
                   stroke={line.color}
                   strokeWidth={2}
                   ifOverflow="extendDomain"
                 />
               );
             })
-          : lines.map((line) => (
-              <Line
-                key={line.dataKey}
-                type="linear"
-                dataKey={line.dataKey}
-                stroke={line.color}
-                strokeWidth={2}
-                dot={false}
-                isAnimationActive={false}
-              />
-            ))}
+          : null}
+        {lines.map((line) => (
+          <Line
+            key={line.dataKey}
+            type="linear"
+            dataKey={line.dataKey}
+            stroke={line.color}
+            strokeWidth={2}
+            dot={isSinglePoint}
+            isAnimationActive={false}
+          />
+        ))}
       </LineChart>
     </ResponsiveContainer>
   );
