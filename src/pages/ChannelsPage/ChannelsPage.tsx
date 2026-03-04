@@ -22,7 +22,7 @@ function formatDueTimeRu(dueTime: string): string {
 
 export function ChannelsPage() {
   const { isLoading: authLoading, error: authError, retry } = useAuth();
-  const { channels, dueTime, isLoading, error, refetch } = useChannels();
+  const { channels, dueTime, msgText, isLoading, error, refetch } = useChannels();
   const [search, setSearch] = useState("");
 
   const navigate = useNavigate();
@@ -66,6 +66,16 @@ export function ChannelsPage() {
           </div>
         )}
       </div>
+
+      {msgText && (
+        <div className="channels-msg-card card-block">
+          <div className="channels-msg-card__title">Ваш пост</div>
+          <div
+            className="channels-msg-card__body"
+            dangerouslySetInnerHTML={{ __html: msgText }}
+          />
+        </div>
+      )}
 
       <header className="channels-header">
         <h1 className="channels-title">Список ваших каналов</h1>

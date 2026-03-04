@@ -1,6 +1,9 @@
 import { API_BASE_URL, USE_MOCK } from "@/shared/config/api";
 import { fetchWithAuth } from "@/shared/api/client";
-import { mockChannels, mockChannelsWithReach, mockDueTime } from "@/shared/mocks/data";
+import {
+  mockChannelsWithReach,
+  mockUserChannelsListResponse,
+} from "@/shared/mocks/data";
 import type { Channel, ChannelWithReach, UserChannelsListResponse } from "./types";
 
 const CHANNELS_URL = `${API_BASE_URL}/max/channels/webapp/channels`;
@@ -41,10 +44,11 @@ let channelsPromise: Promise<ChannelsData> | null = null;
 export const channelApi = {
   async getChannels(): Promise<ChannelsData> {
     if (USE_MOCK) {
+      const json = mockUserChannelsListResponse;
       return Promise.resolve({
-        channels: mockChannels,
-        dueTime: mockDueTime,
-        msgText: null,
+        channels: json.channels.map(mapChannel),
+        dueTime: json.dueTime ?? null,
+        msgText: json.msgText ?? null,
       });
     }
     if (channelsPromise) return channelsPromise;

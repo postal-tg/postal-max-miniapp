@@ -15,6 +15,7 @@ type ChannelsContextValue = {
   /** null = ещё не загружены, [] = загружены, пусто */
   channels: Channel[] | null;
   dueTime: string | null;
+  msgText: string | null;
   isLoading: boolean;
   error: string | null;
   refetch: () => void;
@@ -28,6 +29,7 @@ export function ChannelsProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dueTime, setDueTime] = useState<string | null>(null);
+   const [msgText, setMsgText] = useState<string | null>(null);
 
   const fetchChannels = useCallback(() => {
     setIsLoading(true);
@@ -37,6 +39,7 @@ export function ChannelsProvider({ children }: { children: ReactNode }) {
       .then((data) => {
         setChannels(data.channels);
         setDueTime(data.dueTime);
+        setMsgText(data.msgText);
         setError(null);
       })
       .catch((e) => setError(e.message ?? "Ошибка загрузки каналов"))
@@ -53,11 +56,12 @@ export function ChannelsProvider({ children }: { children: ReactNode }) {
     () => ({
       channels,
       dueTime,
+      msgText,
       isLoading,
       error,
       refetch: fetchChannels,
     }),
-    [channels, dueTime, isLoading, error, fetchChannels]
+    [channels, dueTime, msgText, isLoading, error, fetchChannels]
   );
 
   return (

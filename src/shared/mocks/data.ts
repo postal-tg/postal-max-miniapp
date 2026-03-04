@@ -1,10 +1,11 @@
-import type { Channel, ChannelWithReach } from "@/entities/channel/types";
+import type {
+  Channel,
+  ChannelWithReach,
+  UserChannelsListResponse,
+} from "@/entities/channel/types";
 import type { ChannelStats } from "@/entities/stats/types";
 
 const avatar = "https://ui-avatars.com/api/?name=Mock+Channel&background=0D8ABC&color=fff";
-
-export const mockDueTime = "2026-03-11T17:21:17.567Z";
-// export const mockDueTime = "2026-02-25T17:21:22.995Z";
 
 export const mockChannels: Channel[] = [
   {
@@ -30,6 +31,28 @@ export const mockChannelsWithReach: ChannelWithReach[] = mockChannels.map((ch) =
     currentViews: { count: Math.floor(ch.subscribersCount * 0.05) },
   },
 }));
+
+export const mockUserChannelsListResponse: UserChannelsListResponse = {
+  channels: mockChannels.map((ch, index) => ({
+    channelId: Number(ch.id) || index + 1,
+    title: ch.title,
+    photo: ch.avatarUrl,
+    participantsCount: ch.subscribersCount,
+    channelUrl: null,
+    reach: {
+      last24Hours: Math.floor(ch.subscribersCount * 0.12),
+      last48Hours: Math.floor(ch.subscribersCount * 0.25),
+      last72Hours: Math.floor(ch.subscribersCount * 0.38),
+      currentViews: Math.floor(ch.subscribersCount * 0.05),
+    },
+  })),
+  msgText:
+    "<p><strong>Это пример текста поста</strong>, который используется только в режиме моков. " +
+    "Здесь есть и <em>курсивное выделение</em>, и <b>жирный текст</b>, а также простая разметка." +
+    "Он помогает проверить, как отображается HTML‑разметка и обрезка до трёх строк " +
+    "в карточке «Ваш пост».</p>",
+  dueTime: "2026-03-11T17:21:17.567Z",
+};
 
 function makeReachPoints(days: number, baseReach: number): { date: string; reach: number }[] {
   return Array.from({ length: days }, (_, i) => ({
