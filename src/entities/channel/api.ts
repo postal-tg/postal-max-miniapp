@@ -4,15 +4,33 @@ import {
   mockChannelsWithReach,
   mockUserChannelsListResponse,
 } from "@/shared/mocks/data";
-import type { Channel, ChannelWithReach, UserChannelsListResponse } from "./types";
+import type {
+  Channel,
+  ChannelWithReach,
+  PostViewStats,
+  UserChannelsListResponse,
+} from "./types";
 
 const CHANNELS_URL = `${API_BASE_URL}/max/channels/webapp/channels`;
 
 type ChannelsData = {
-  channels: Channel[];
+  channels: ChannelWithReach[];
   dueTime: string | null;
   msgText: string | null;
+  postViewStats: PostViewStats;
 };
+
+function postViewStatsFromChannel(
+  ch: UserChannelsListResponse["channels"][number]
+): PostViewStats {
+  const r = ch.reach;
+  return {
+    currentViews: r.currentViews ?? null,
+    last24Hours: r.last24Hours ?? null,
+    last48Hours: r.last48Hours ?? null,
+    last72Hours: r.last72Hours ?? null,
+  };
+}
 
 function mapChannel(item: UserChannelsListResponse["channels"][number]): Channel {
   return {
@@ -22,6 +40,7 @@ function mapChannel(item: UserChannelsListResponse["channels"][number]): Channel
       item.photo ??
       `https://ui-avatars.com/api/?name=${encodeURIComponent(item.title)}&background=0D8ABC&color=fff`,
     subscribersCount: item.participantsCount,
+    channelUrl: item.channelUrl ?? null,
   };
 }
 
@@ -45,10 +64,19 @@ export const channelApi = {
   async getChannels(): Promise<ChannelsData> {
     if (USE_MOCK) {
       const json = mockUserChannelsListResponse;
+      const first = json.channels[0];
       return Promise.resolve({
-        channels: json.channels.map(mapChannel),
+        channels: json.channels.map(mapChannelWithReach),
         dueTime: json.dueTime ?? null,
         msgText: json.msgText ?? null,
+        postViewStats: first
+          ? postViewStatsFromChannel(first)
+          : {
+              currentViews: null,
+              last24Hours: null,
+              last48Hours: null,
+              last72Hours: null,
+            },
       });
     }
     if (channelsPromise) return channelsPromise;
@@ -59,10 +87,19 @@ export const channelApi = {
         throw new Error(text || `Ошибка загрузки каналов: ${res.status}`);
       }
       const json = (await res.json()) as UserChannelsListResponse;
+      const first = json.channels?.[0];
       return {
-        channels: json.channels.map(mapChannel),
+        channels: json.channels.map(mapChannelWithReach),
         dueTime: json.dueTime ?? null,
         msgText: json.msgText ?? null,
+        postViewStats: first
+          ? postViewStatsFromChannel(first)
+          : {
+              currentViews: null,
+              last24Hours: null,
+              last48Hours: null,
+              last72Hours: null,
+            },
       };
     })();
     channelsPromise = p;

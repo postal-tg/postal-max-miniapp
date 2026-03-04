@@ -3,7 +3,7 @@ export type ChannelId = string;
 /** Ответ GET /max/channels/webapp/channels */
 export type UserChannelsListResponse = {
   channels: UserChannelStats[];
-  msgText: string;
+  msgText: string | null;
   dueTime: string;
 };
 
@@ -41,8 +41,17 @@ export type Channel = {
   title: string;
   avatarUrl: string;
   subscribersCount: number;
+  channelUrl: string | null;
 };
 
 export type ChannelWithReach = Channel & {
   reach: ChannelReach;
+};
+
+/** Статистика просмотров поста (для блока «Статистика просмотров») */
+export type PostViewStats = {
+  currentViews: number | null;
+  last24Hours: number | null;
+  last48Hours: number | null;
+  last72Hours: number | null;
 };
