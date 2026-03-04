@@ -4,11 +4,52 @@
   box-sizing: border-box;
 }
 
+.card-block {
+  padding: 12px;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
 .channels-header {
   display: flex;
   flex-direction: column;
   gap: 12px;
   margin-bottom: 16px;
+}
+
+.channels-top-card {
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.channels-top-card__image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.channels-top-card__text {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: center;
+}
+
+.channels-top-card__title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #222222;
+}
+
+.channels-top-card__subtitle {
+  font-size: 14px;
+  font-weight: 400;
+  color: #222222;
+  opacity: 0.5;
 }
 
 .channels-title {
@@ -70,9 +111,6 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: #ffffff;
   cursor: pointer;
   transition: background-color 0.15s ease;
 }
@@ -124,7 +162,7 @@
 .channels-empty-title {
   font-size: 14px;
   font-weight: 500;
-  color: #2563eb; /* синий, как на макете */
+  color: #2563eb;
   margin-bottom: 8px;
 }
 

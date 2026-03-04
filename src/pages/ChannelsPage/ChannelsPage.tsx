@@ -4,11 +4,25 @@ import { useAuth } from "@/app/providers/AuthProvider";
 import { useChannels } from "@/app/providers/ChannelsProvider";
 import type { Channel } from "../../entities/channel/types";
 import { Loader } from "@/shared/ui/Loader/Loader";
+import statsImage from "@/assets/images/stats.png";
 import "./ChannelsPage.css";
+
+function formatDueTimeRu(dueTime: string): string {
+  const date = new Date(dueTime);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+
+  return `${day}.${month}.${year} в ${hours}:${minutes}`;
+}
 
 export function ChannelsPage() {
   const { isLoading: authLoading, error: authError, retry } = useAuth();
-  const { channels, isLoading, error, refetch } = useChannels();
+  const { channels, dueTime, isLoading, error, refetch } = useChannels();
   const [search, setSearch] = useState("");
 
   const navigate = useNavigate();
@@ -19,6 +33,8 @@ export function ChannelsPage() {
     if (!q) return list;
     return list.filter((ch) => ch.title.toLowerCase().includes(q));
   }, [channels, search]);
+
+  const formattedDueTime = dueTime ? formatDueTimeRu(dueTime) : null;
 
   const handleOpenChannel = (channel: Channel) => {
     navigate(`/channels/${channel.id}`, {
@@ -39,6 +55,18 @@ export function ChannelsPage() {
 
   return (
     <div className="channels-page">
+      <div className="channels-top-card card-block">
+        <img src={statsImage} alt="" className="channels-top-card__image" />
+        {formattedDueTime && (
+          <div className="channels-top-card__text">
+            <div className="channels-top-card__title">Ваш пост еще не вышел</div>
+            <div className="channels-top-card__subtitle">
+              Пост выйдет {formattedDueTime}
+            </div>
+          </div>
+        )}
+      </div>
+
       <header className="channels-header">
         <h1 className="channels-title">Список ваших каналов</h1>
         <input
@@ -72,7 +100,7 @@ export function ChannelsPage() {
           {filtered.map((channel) => (
             <li
               key={channel.id}
-              className="channels-item"
+              className="channels-item card-block"
               onClick={() => handleOpenChannel(channel)}
             >
               <div className="channels-item-left">

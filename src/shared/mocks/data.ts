@@ -3,6 +3,9 @@ import type { ChannelStats } from "@/entities/stats/types";
 
 const avatar = "https://ui-avatars.com/api/?name=Mock+Channel&background=0D8ABC&color=fff";
 
+export const mockDueTime = "2026-03-11T17:21:17.567Z";
+// export const mockDueTime = "2026-02-25T17:21:22.995Z";
+
 export const mockChannels: Channel[] = [
   {
     id: "1",
@@ -24,6 +27,7 @@ export const mockChannelsWithReach: ChannelWithReach[] = mockChannels.map((ch) =
     last24hours: { count: Math.floor(ch.subscribersCount * 0.12) },
     last48hours: { count: Math.floor(ch.subscribersCount * 0.25) },
     last72hours: { count: Math.floor(ch.subscribersCount * 0.38) },
+    currentViews: { count: Math.floor(ch.subscribersCount * 0.05) },
   },
 }));
 

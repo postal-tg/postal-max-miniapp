@@ -14,6 +14,7 @@ import type { Channel } from "@/entities/channel/types";
 type ChannelsContextValue = {
   /** null = ещё не загружены, [] = загружены, пусто */
   channels: Channel[] | null;
+  dueTime: string | null;
   isLoading: boolean;
   error: string | null;
   refetch: () => void;
@@ -26,6 +27,7 @@ export function ChannelsProvider({ children }: { children: ReactNode }) {
   const [channels, setChannels] = useState<Channel[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dueTime, setDueTime] = useState<string | null>(null);
 
   const fetchChannels = useCallback(() => {
     setIsLoading(true);
@@ -33,7 +35,8 @@ export function ChannelsProvider({ children }: { children: ReactNode }) {
     channelApi
       .getChannels()
       .then((data) => {
-        setChannels(data);
+        setChannels(data.channels);
+        setDueTime(data.dueTime);
         setError(null);
       })
       .catch((e) => setError(e.message ?? "Ошибка загрузки каналов"))
@@ -49,11 +52,12 @@ export function ChannelsProvider({ children }: { children: ReactNode }) {
   const value = useMemo<ChannelsContextValue>(
     () => ({
       channels,
+      dueTime,
       isLoading,
       error,
       refetch: fetchChannels,
     }),
-    [channels, isLoading, error, fetchChannels]
+    [channels, dueTime, isLoading, error, fetchChannels]
   );
 
   return (
