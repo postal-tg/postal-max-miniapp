@@ -1,21 +1,21 @@
 import { API_BASE_URL, USE_MOCK } from "@/shared/config/api";
 import { fetchWithAuth } from "@/shared/api/client";
-import { mockChannelsWithReach, mockUserChannelsListResponse } from "@/shared/mocks/data";
-import type { Channel, ChannelWithReach, PostViewStats, UserChannelsListResponse } from "./types";
+import { mockChannelsData, mockPostStatsChannels, mockPostStatsChannelsResponse } from "@/shared/mocks/data";
+import type { Channel, PostStats, PostStatsChannel, UserChannelsListResponse } from "./types";
 
 const CHANNELS_URL = `${API_BASE_URL}/max/channels/webapp/channels`;
 
 type ChannelsData = {
-  channels: ChannelWithReach[];
+  channels: PostStatsChannel[];
 };
 
-type ChannelsWithReachData = {
-  channels: ChannelWithReach[];
+type PostStatsData = {
+  channels: PostStatsChannel[];
   msgText: string | null;
   dueTime: string | null;
 };
 
-function postViewStatsFromChannel(ch: UserChannelsListResponse["channels"][number]): PostViewStats {
+function postViewStatsFromChannel(ch: UserChannelsListResponse["channels"][number]): PostStats {
   const r = ch.reach;
   return {
     currentViews: r.currentViews ?? null,
@@ -37,7 +37,7 @@ function mapChannel(item: UserChannelsListResponse["channels"][number]): Channel
   };
 }
 
-function mapChannelWithReach(item: UserChannelsListResponse["channels"][number]): ChannelWithReach {
+function mapChannelWithReach(item: UserChannelsListResponse["channels"][number]): PostStatsChannel {
   return {
     ...mapChannel(item),
     reach: {
@@ -54,9 +54,8 @@ let channelsPromise: Promise<ChannelsData> | null = null;
 export const channelApi = {
   async getChannels(): Promise<ChannelsData> {
     if (USE_MOCK) {
-      const json = mockUserChannelsListResponse;
       return Promise.resolve({
-        channels: json.channels.map(mapChannelWithReach),
+        channels: mockChannelsData.channels,
       });
     }
     if (channelsPromise) return channelsPromise;
@@ -89,11 +88,11 @@ export const channelApi = {
     return p;
   },
 
-  async getChannelsWithReach(postUuid: string): Promise<ChannelsWithReachData> {
+  async getPostStats(postUuid: string): Promise<PostStatsData> {
     if (USE_MOCK) {
-      const json = mockUserChannelsListResponse;
+      const json = mockPostStatsChannelsResponse;
       return Promise.resolve({
-        channels: mockChannelsWithReach,
+        channels: mockPostStatsChannels,
         msgText: json.msgText ?? null,
         dueTime: json.dueTime ?? null,
       });

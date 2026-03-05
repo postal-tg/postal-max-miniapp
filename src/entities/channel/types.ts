@@ -44,14 +44,17 @@ export type Channel = {
   channelUrl: string | null;
 };
 
-export type ChannelWithReach = Channel & {
+export type PostStatsChannel = Channel & {
   reach: ChannelReach;
 };
 
 /** Статистика просмотров поста (для блока «Статистика просмотров») */
-export type PostViewStats = {
+export type PostStats = {
   currentViews: number | null;
   last24Hours: number | null;
   last48Hours: number | null;
   last72Hours: number | null;
 };
+
+/** Временный алиас для совместимости. Постепенно можно удалить. */
+export type PostViewStats = PostStats;

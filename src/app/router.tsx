@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./providers/AuthProvider";
 import { ChannelsPage } from "../pages/ChannelsPage/ChannelsPage";
 import { ChannelStatsPage } from "../pages/ChannelStatsPage/ChannelStatsPage";
-import { ReachPage } from "../pages/ReachPage/ReachPage";
+import { PostStatsPage } from "../pages/ReachPage/PostStatsPage";
 import { FollowerExtensionPage } from "../pages/FollowerExtensionPage/FollowerExtensionPage";
 import { Layout } from "@/shared/ui/Layout/Layout";
 import { getStartParam } from "@/shared/utils/parseInitData";
@@ -35,7 +35,7 @@ export function AppRouter() {
           <Route element={<Layout />}>
             <Route path="/channels" element={<ChannelsPage />} />
             <Route path="/channels/:id" element={<ChannelStatsPage />} />
-            <Route path="/reach" element={<ReachPage />} />
+            <Route path="/reach" element={<PostStatsPage />} />
             <Route path="/follower-extension" element={<FollowerExtensionPage />} />
           </Route>
         </Routes>

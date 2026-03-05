@@ -1,6 +1,5 @@
 import { API_BASE_URL, USE_MOCK } from "@/shared/config/api";
 import { fetchWithAuth } from "@/shared/api/client";
-import { mockUserChannelsListResponse } from "@/shared/mocks/data";
 
 type FollowerExtensionResponse = {
   msgText: string;

@@ -9,11 +9,11 @@ import {
 } from "react";
 import { useAuth } from "./AuthProvider";
 import { channelApi } from "@/entities/channel/api";
-import type { ChannelWithReach, PostViewStats } from "@/entities/channel/types";
+import type { PostStatsChannel } from "@/entities/channel/types";
 
 type ChannelsContextValue = {
   /** null = ещё не загружены, [] = загружены, пусто */
-  channels: ChannelWithReach[] | null;
+  channels: PostStatsChannel[] | null;
   isLoading: boolean;
   error: string | null;
   refetch: () => void;
@@ -23,7 +23,7 @@ const ChannelsContext = createContext<ChannelsContextValue | null>(null);
 
 export function ChannelsProvider({ children }: { children: ReactNode }) {
   const { isLoading: authLoading, error: authError } = useAuth();
-  const [channels, setChannels] = useState<ChannelWithReach[] | null>(null);
+  const [channels, setChannels] = useState<PostStatsChannel[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

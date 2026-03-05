@@ -1,4 +1,4 @@
-import type { Channel, ChannelWithReach, UserChannelsListResponse } from "@/entities/channel/types";
+import type { Channel, PostStatsChannel, UserChannelsListResponse } from "@/entities/channel/types";
 import type { ChannelStats } from "@/entities/stats/types";
 
 const avatar = "https://ui-avatars.com/api/?name=Mock+Channel&background=0D8ABC&color=fff";
@@ -34,7 +34,7 @@ export const mockChannels: Channel[] = [
   },
 ];
 
-export const mockChannelsWithReach: ChannelWithReach[] = mockChannels.map((ch) => ({
+export const mockPostStatsChannels: PostStatsChannel[] = mockChannels.map((ch) => ({
   ...ch,
   reach: {
     last24hours: { count: Math.floor(ch.subscribersCount * 0.12) },
@@ -44,7 +44,8 @@ export const mockChannelsWithReach: ChannelWithReach[] = mockChannels.map((ch) =
   },
 }));
 
-export const mockUserChannelsListResponse: UserChannelsListResponse = {
+/** Мок ответа API для страницы статистики поста (PostStats). */
+export const mockPostStatsChannelsResponse: UserChannelsListResponse = {
   channels: mockChannels.map((ch, index) => ({
     channelId: Number(ch.id) || index + 1,
     title: ch.title,
@@ -65,6 +66,11 @@ export const mockUserChannelsListResponse: UserChannelsListResponse = {
   // msgText: null,
   //dueTime: "2026-03-11T17:21:17.567Z",
   dueTime: "2026-03-03T17:21:17.567Z",
+};
+
+/** Мок для списка каналов в ChannelsPage без лишних полей. */
+export const mockChannelsData: { channels: PostStatsChannel[] } = {
+  channels: mockPostStatsChannels,
 };
 
 function makeReachPoints(days: number, baseReach: number): { date: string; reach: number }[] {

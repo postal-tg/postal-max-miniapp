@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { channelApi } from "../../entities/channel/api";
-import type { ChannelWithReach } from "../../entities/channel/types";
-import "./ReachPage.css";
+import type { PostStatsChannel } from "../../entities/channel/types";
+import "./PostStatsPage.css";
 import { Loader } from "@/shared/ui/Loader/Loader";
 import statsImage from "@/assets/images/stats.png";
 import lupaIcon from "@/assets/images/lupa.png";
@@ -29,11 +29,11 @@ function isDueTimePassed(dueTime: string | null): boolean {
   return !Number.isNaN(date.getTime()) && date.getTime() <= Date.now();
 }
 
-export function ReachPage() {
+export function PostStatsPage() {
   const [searchParams] = useSearchParams();
   const postId = searchParams.get("post_id");
 
-  const [channels, setChannels] = useState<ChannelWithReach[]>([]);
+  const [channels, setChannels] = useState<PostStatsChannel[]>([]);
   const [msgText, setMsgText] = useState<string | null>(null);
   const [dueTime, setDueTime] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -52,7 +52,7 @@ export function ReachPage() {
     setIsLoading(true);
     setError(null);
     channelApi
-      .getChannelsWithReach(postId)
+      .getPostStats(postId)
       .then((data) => {
         setChannels(data.channels);
         setMsgText(data.msgText);
@@ -109,7 +109,7 @@ export function ReachPage() {
     );
   }, [channels]);
 
-  const handleOpenChannel = (channel: ChannelWithReach) => {
+  const handleOpenChannel = (channel: PostStatsChannel) => {
     navigate(`/channels/${channel.id}`, {
       state: { title: channel.title, avatarUrl: channel.avatarUrl },
     });
@@ -311,3 +311,4 @@ export function ReachPage() {
     </div>
   );
 }
+

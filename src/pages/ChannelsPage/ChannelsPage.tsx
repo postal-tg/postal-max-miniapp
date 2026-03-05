@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useChannels } from "@/app/providers/ChannelsProvider";
-import type { ChannelWithReach } from "../../entities/channel/types";
+import type { PostStatsChannel } from "../../entities/channel/types";
 import { Loader } from "@/shared/ui/Loader/Loader";
 import lupaIcon from "@/assets/images/lupa.png";
 import cancelIcon from "@/assets/images/cancel.png";
@@ -23,7 +23,7 @@ export function ChannelsPage() {
     return list.filter((ch) => ch.title.toLowerCase().includes(q));
   }, [channels, search]);
 
-  const handleOpenChannel = (channel: ChannelWithReach) => {
+  const handleOpenChannel = (channel: PostStatsChannel) => {
     navigate(`/channels/${channel.id}`, {
       state: { title: channel.title, avatarUrl: channel.avatarUrl },
     });
