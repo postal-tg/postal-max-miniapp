@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import "./FollowerExtensionPage.css";
 import { followerExtensionApi } from "@/entities/followerExtension/api";
 import { useAuth } from "@/app/providers/AuthProvider";
@@ -8,6 +8,10 @@ import { getUserIdFromInitData } from "@/shared/utils/parseInitData";
 export function FollowerExtensionPage() {
   const { isAuthenticated, isLoading: isAuthLoading, error: authError } = useAuth();
   const [searchParams] = useSearchParams();
+  const { userId: userIdFromPath, followerExtensionUuid: uuidFromPath } = useParams<{
+    userId: string;
+    followerExtensionUuid: string;
+  }>();
 
   const [msgHtml, setMsgHtml] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -22,9 +26,19 @@ export function FollowerExtensionPage() {
       return;
     }
 
-    const userId = getUserIdFromInitData()!;
-    const startParam = searchParams.get("start_param")!;
-    const followerExtensionUuid = startParam.slice("fe_".length);
+    const startParam = searchParams.get("start_param");
+    const followerExtensionUuidFromQuery = startParam?.startsWith("fe_")
+      ? startParam.slice("fe_".length).trim()
+      : null;
+
+    const userId = userIdFromPath?.trim() || getUserIdFromInitData();
+    const followerExtensionUuid = uuidFromPath?.trim() || followerExtensionUuidFromQuery;
+
+    if (!userId || !followerExtensionUuid) {
+      setIsLoading(false);
+      setError("Не найдены параметры расширения подписчика");
+      return;
+    }
 
     let isCancelled = false;
 
@@ -55,7 +69,14 @@ export function FollowerExtensionPage() {
     return () => {
       isCancelled = true;
     };
-  }, [isAuthLoading, isAuthenticated, authError, searchParams]);
+  }, [
+    isAuthLoading,
+    isAuthenticated,
+    authError,
+    searchParams,
+    userIdFromPath,
+    uuidFromPath,
+  ]);
 
   const content = (() => {
     if (isLoading) {
@@ -96,4 +117,3 @@ export function FollowerExtensionPage() {
     </div>
   );
 }
-

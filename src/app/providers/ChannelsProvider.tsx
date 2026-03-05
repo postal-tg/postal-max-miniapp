@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "./AuthProvider";
 import { channelApi } from "@/entities/channel/api";
 import type { PostStatsChannel } from "@/entities/channel/types";
@@ -23,9 +24,12 @@ const ChannelsContext = createContext<ChannelsContextValue | null>(null);
 
 export function ChannelsProvider({ children }: { children: ReactNode }) {
   const { isLoading: authLoading, error: authError } = useAuth();
+  const { pathname } = useLocation();
   const [channels, setChannels] = useState<PostStatsChannel[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const shouldFetchChannels =
+    pathname === "/channels" || pathname.startsWith("/channels/");
 
   const fetchChannels = useCallback(() => {
     setIsLoading(true);
@@ -41,10 +45,11 @@ export function ChannelsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (!shouldFetchChannels) return;
     if (authLoading || authError) return;
     if (channels !== null) return;
     fetchChannels();
-  }, [authLoading, authError, channels, fetchChannels]);
+  }, [shouldFetchChannels, authLoading, authError, channels, fetchChannels]);
 
   const value = useMemo<ChannelsContextValue>(
     () => ({
