@@ -82,7 +82,11 @@ export function LineChartBase<T extends object>({
           tickMargin={4}
           tick={{ fontSize: 8, fill: "#ababab" }}
           tickFormatter={(value) => value.toLocaleString("ru-RU")}
-          domain={["dataMin", "dataMax"]}
+
+          domain={[
+            (dataMin: number) => (dataMin >= 0 ? dataMin * 0.9 : dataMin * 1.1),
+            (dataMax: number) => (dataMax >= 0 ? dataMax * 1.1 : dataMax * 0.9),
+          ]}
           width={"auto"}
         />
         {tooltipContent ? (
@@ -92,19 +96,19 @@ export function LineChartBase<T extends object>({
         )}
         {isSinglePoint
           ? lines.map((line) => {
-              const point = chartData[0] as Record<string, number | string | null | undefined>;
-              const value = point[line.dataKey];
-              if (typeof value !== "number") return null;
-              return (
-                <ReferenceLine
-                  key={line.dataKey}
-                  y={value}
-                  stroke={line.color}
-                  strokeWidth={2}
-                  ifOverflow="extendDomain"
-                />
-              );
-            })
+            const point = chartData[0] as Record<string, number | string | null | undefined>;
+            const value = point[line.dataKey];
+            if (typeof value !== "number") return null;
+            return (
+              <ReferenceLine
+                key={line.dataKey}
+                y={value}
+                stroke={line.color}
+                strokeWidth={2}
+                ifOverflow="extendDomain"
+              />
+            );
+          })
           : null}
         {lines.map((line) => (
           <Line
