@@ -164,7 +164,7 @@ export function ChannelStatsPage() {
           {/* РОСТ */}
           <section className="stats-section">
             <div className="stats-title-row">
-              <div className="stats-title">Рост</div>
+              <div className="stats-title">Количество подписчиков</div>
               <div className="stats-period">
                 {formatRuShortDate(stats.summary.period.from)} –
                 {formatRuShortDate(stats.summary.period.to)}
@@ -185,7 +185,7 @@ export function ChannelStatsPage() {
           {/* ПОДПИСЧИКИ */}
           <section className="stats-section">
             <div className="stats-title-row">
-              <div className="stats-title">Подписчики</div>
+              <div className="stats-title">Динамика подписчиков</div>
               <div className="stats-period">
                 {formatRuShortDate(stats.summary.period.from)} –
                 {formatRuShortDate(stats.summary.period.to)}
@@ -203,17 +203,15 @@ export function ChannelStatsPage() {
             </div>
             <div className="stats-legend-badges">
               <span
-                className={`stats-badge stats-badge_pos${
-                  !onSubsribers ? " stats-badge_inactive" : ""
-                }`}
+                className={`stats-badge stats-badge_pos${!onSubsribers ? " stats-badge_inactive" : ""
+                  }`}
                 onClick={() => setOnSubscribers(!onSubsribers)}
               >
                 Подписались
               </span>
               <span
-                className={`stats-badge stats-badge_neg${
-                  !onUnsubsribers ? " stats-badge_inactive" : ""
-                }`}
+                className={`stats-badge stats-badge_neg${!onUnsubsribers ? " stats-badge_inactive" : ""
+                  }`}
                 onClick={() => setOnUnsubscribers(!onUnsubsribers)}
               >
                 Отписались
@@ -224,7 +222,7 @@ export function ChannelStatsPage() {
           {/* ОХВАТ */}
           <section className="stats-section">
             <div className="stats-title-row">
-              <div className="stats-title">Охват</div>
+              <div className="stats-title">Охват канала</div>
               <div className="stats-period">
                 {formatRuShortDate(stats.summary.period.from)} –
                 {formatRuShortDate(stats.summary.period.to)}
@@ -248,9 +246,8 @@ export function ChannelStatsPage() {
                   return (
                     <button
                       key={value}
-                      className={`stats-range-btn ${
-                        range === value ? "stats-range-btn_active" : ""
-                      }`}
+                      className={`stats-range-btn ${range === value ? "stats-range-btn_active" : ""
+                        }`}
                       onClick={() => setRange(value)}
                     >
                       {label}
