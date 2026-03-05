@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import "./FollowerExtensionPage.css";
 import { followerExtensionApi } from "@/entities/followerExtension/api";
 import { useAuth } from "@/app/providers/AuthProvider";
-import { getStartParam, getUserIdFromInitData } from "@/shared/utils/parseInitData";
+import { getUserIdFromInitData } from "@/shared/utils/parseInitData";
 
 export function FollowerExtensionPage() {
   const { isAuthenticated, isLoading: isAuthLoading, error: authError } = useAuth();
@@ -22,28 +22,9 @@ export function FollowerExtensionPage() {
       return;
     }
 
-    const userId = getUserIdFromInitData();
-    if (!userId) {
-      setIsLoading(false);
-      setError("Не удалось определить пользователя из WebApp initData");
-      return;
-    }
-
-    const startParam =
-      searchParams.get("start_param") ?? searchParams.get("startapp") ?? getStartParam();
-
-    if (!startParam || !startParam.startsWith("fe_")) {
-      setIsLoading(false);
-      setError("Некорректный параметр расширения подписчика");
-      return;
-    }
-
+    const userId = getUserIdFromInitData()!;
+    const startParam = searchParams.get("start_param")!;
     const followerExtensionUuid = startParam.slice("fe_".length);
-    if (!followerExtensionUuid) {
-      setIsLoading(false);
-      setError("Не передан идентификатор расширения подписчика");
-      return;
-    }
 
     let isCancelled = false;
 
