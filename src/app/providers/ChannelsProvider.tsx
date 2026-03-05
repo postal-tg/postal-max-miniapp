@@ -14,19 +14,9 @@ import type { ChannelWithReach, PostViewStats } from "@/entities/channel/types";
 type ChannelsContextValue = {
   /** null = ещё не загружены, [] = загружены, пусто */
   channels: ChannelWithReach[] | null;
-  dueTime: string | null;
-  msgText: string | null;
-  postViewStats: PostViewStats;
   isLoading: boolean;
   error: string | null;
   refetch: () => void;
-};
-
-const emptyPostViewStats: PostViewStats = {
-  currentViews: null,
-  last24Hours: null,
-  last48Hours: null,
-  last72Hours: null,
 };
 
 const ChannelsContext = createContext<ChannelsContextValue | null>(null);
@@ -36,9 +26,6 @@ export function ChannelsProvider({ children }: { children: ReactNode }) {
   const [channels, setChannels] = useState<ChannelWithReach[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [dueTime, setDueTime] = useState<string | null>(null);
-  const [msgText, setMsgText] = useState<string | null>(null);
-  const [postViewStats, setPostViewStats] = useState<PostViewStats>(emptyPostViewStats);
 
   const fetchChannels = useCallback(() => {
     setIsLoading(true);
@@ -47,9 +34,6 @@ export function ChannelsProvider({ children }: { children: ReactNode }) {
       .getChannels()
       .then((data) => {
         setChannels(data.channels);
-        setDueTime(data.dueTime);
-        setMsgText(data.msgText);
-        setPostViewStats(data.postViewStats);
         setError(null);
       })
       .catch((e) => setError(e.message ?? "Ошибка загрузки каналов"))
@@ -65,14 +49,11 @@ export function ChannelsProvider({ children }: { children: ReactNode }) {
   const value = useMemo<ChannelsContextValue>(
     () => ({
       channels,
-      dueTime,
-      msgText,
-      postViewStats,
       isLoading,
       error,
       refetch: fetchChannels,
     }),
-    [channels, dueTime, msgText, postViewStats, isLoading, error, fetchChannels]
+    [channels, isLoading, error, fetchChannels]
   );
 
   return (

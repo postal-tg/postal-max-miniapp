@@ -4,7 +4,7 @@ export type ChannelId = string;
 export type UserChannelsListResponse = {
   channels: UserChannelStats[];
   msgText: string | null;
-  dueTime: string;
+  dueTime: string | null;
 };
 
 export type UserChannelStats = {

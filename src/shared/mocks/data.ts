@@ -6,17 +6,31 @@ const avatar = "https://ui-avatars.com/api/?name=Mock+Channel&background=0D8ABC&
 export const mockChannels: Channel[] = [
   {
     id: "1",
-    title: "Тестовый канал 1 - татарские новости в Новгороде",
+    title: "Тестовый канал 1 — татарские новости в Новгороде",
     avatarUrl: avatar,
     subscribersCount: 12500,
     channelUrl: "https://t.me/example1",
   },
   {
     id: "2",
-    title: "Тестовый канал 2",
+    title: "Тестовый канал 2 — городские события",
     avatarUrl: avatar,
     subscribersCount: 8300,
     channelUrl: "https://t.me/example2",
+  },
+  {
+    id: "3",
+    title: "Тестовый канал 3 — технологии и бизнес",
+    avatarUrl: avatar,
+    subscribersCount: 15400,
+    channelUrl: "https://t.me/example3",
+  },
+  {
+    id: "4",
+    title: "Тестовый канал 4 — развлекательный",
+    avatarUrl: avatar,
+    subscribersCount: 4100,
+    channelUrl: "https://t.me/example4",
   },
 ];
 
@@ -46,12 +60,11 @@ export const mockUserChannelsListResponse: UserChannelsListResponse = {
   })),
   msgText:
     "<p><strong>Это пример текста поста</strong>, который используется только в режиме моков. " +
-    "Здесь есть и <em>курсивное выделение</em>, и <b>жирный текст</b>, а также простая разметка." +
-    "Он помогает проверить, как отображается HTML‑разметка и обрезка до трёх строк " +
-    "в карточке «Ваш пост».</p>",
+    "Здесь есть и <em>курсивное выделение</em>, и <b>жирный текст</b>, а также простая разметка. " +
+    "Он помогает проверить, как отображается HTML‑разметка и обрезка текста в интерфейсе.</p>",
   // msgText: null,
-  dueTime: "2026-03-11T17:21:17.567Z",
-  //dueTime: "2026-03-03T17:21:17.567Z",
+  //dueTime: "2026-03-11T17:21:17.567Z",
+  dueTime: "2026-03-03T17:21:17.567Z",
 };
 
 function makeReachPoints(days: number, baseReach: number): { date: string; reach: number }[] {

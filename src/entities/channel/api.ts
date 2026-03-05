@@ -1,28 +1,21 @@
 import { API_BASE_URL, USE_MOCK } from "@/shared/config/api";
 import { fetchWithAuth } from "@/shared/api/client";
-import {
-  mockChannelsWithReach,
-  mockUserChannelsListResponse,
-} from "@/shared/mocks/data";
-import type {
-  Channel,
-  ChannelWithReach,
-  PostViewStats,
-  UserChannelsListResponse,
-} from "./types";
+import { mockChannelsWithReach, mockUserChannelsListResponse } from "@/shared/mocks/data";
+import type { Channel, ChannelWithReach, PostViewStats, UserChannelsListResponse } from "./types";
 
 const CHANNELS_URL = `${API_BASE_URL}/max/channels/webapp/channels`;
 
 type ChannelsData = {
   channels: ChannelWithReach[];
-  dueTime: string | null;
-  msgText: string | null;
-  postViewStats: PostViewStats;
 };
 
-function postViewStatsFromChannel(
-  ch: UserChannelsListResponse["channels"][number]
-): PostViewStats {
+type ChannelsWithReachData = {
+  channels: ChannelWithReach[];
+  msgText: string | null;
+  dueTime: string | null;
+};
+
+function postViewStatsFromChannel(ch: UserChannelsListResponse["channels"][number]): PostViewStats {
   const r = ch.reach;
   return {
     currentViews: r.currentViews ?? null,
@@ -44,9 +37,7 @@ function mapChannel(item: UserChannelsListResponse["channels"][number]): Channel
   };
 }
 
-function mapChannelWithReach(
-  item: UserChannelsListResponse["channels"][number]
-): ChannelWithReach {
+function mapChannelWithReach(item: UserChannelsListResponse["channels"][number]): ChannelWithReach {
   return {
     ...mapChannel(item),
     reach: {
@@ -64,19 +55,8 @@ export const channelApi = {
   async getChannels(): Promise<ChannelsData> {
     if (USE_MOCK) {
       const json = mockUserChannelsListResponse;
-      const first = json.channels[0];
       return Promise.resolve({
         channels: json.channels.map(mapChannelWithReach),
-        dueTime: json.dueTime ?? null,
-        msgText: json.msgText ?? null,
-        postViewStats: first
-          ? postViewStatsFromChannel(first)
-          : {
-              currentViews: null,
-              last24Hours: null,
-              last48Hours: null,
-              last72Hours: null,
-            },
       });
     }
     if (channelsPromise) return channelsPromise;
@@ -109,8 +89,15 @@ export const channelApi = {
     return p;
   },
 
-  async getChannelsWithReach(postUuid: string): Promise<ChannelWithReach[]> {
-    if (USE_MOCK) return Promise.resolve(mockChannelsWithReach);
+  async getChannelsWithReach(postUuid: string): Promise<ChannelsWithReachData> {
+    if (USE_MOCK) {
+      const json = mockUserChannelsListResponse;
+      return Promise.resolve({
+        channels: mockChannelsWithReach,
+        msgText: json.msgText ?? null,
+        dueTime: json.dueTime ?? null,
+      });
+    }
     const url = `${CHANNELS_URL}/post/${encodeURIComponent(postUuid)}`;
     const res = await fetchWithAuth(url, { method: "GET" });
     if (!res.ok) {
@@ -118,6 +105,10 @@ export const channelApi = {
       throw new Error(text || `Ошибка загрузки каналов поста: ${res.status}`);
     }
     const json = (await res.json()) as UserChannelsListResponse;
-    return json.channels.map(mapChannelWithReach);
+    return {
+      channels: json.channels.map(mapChannelWithReach),
+      msgText: json.msgText ?? null,
+      dueTime: json.dueTime ?? null,
+    };
   },
 };
