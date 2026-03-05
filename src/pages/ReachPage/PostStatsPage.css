@@ -1,6 +1,233 @@
 /* PostStatsPage: стили для карточек статистики и блока «Ваш пост». */
 
-.channels-msg-card {
+.post-stats-page {
+  padding: 16px 16px 24px;
+  background: #f3f4f6;
+  box-sizing: border-box;
+}
+
+.post-stats-hero {
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.post-stats-hero__image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.post-stats-hero__text {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: center;
+}
+
+.post-stats-hero__title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #222222;
+}
+
+.post-stats-hero__subtitle {
+  font-size: 14px;
+  font-weight: 400;
+  color: #222222;
+  opacity: 0.5;
+}
+
+.post-stats-header {
+  margin-bottom: 16px;
+}
+
+.post-stats-header__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.post-stats-header__title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.post-stats-header__search-button {
+  flex-shrink: 0;
+  padding: 4px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.post-stats-header__search-button img {
+  display: block;
+  width: 16px;
+  height: 17px;
+  object-fit: contain;
+}
+
+.post-stats-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.post-stats-search__input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+  padding-right: 40px;
+}
+
+.post-stats-search__input:focus {
+  border-color: #00000080;
+}
+
+.post-stats-search__cancel {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.post-stats-search__cancel img {
+  display: block;
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.post-stats-status {
+  font-size: 14px;
+  color: #4b5563;
+}
+
+.post-stats-status_error {
+  color: #b91c1c;
+}
+
+.post-stats-empty {
+  margin-top: 80px;
+  text-align: center;
+  padding: 0 16px;
+}
+
+.post-stats-empty__title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #2563eb;
+  margin-bottom: 8px;
+}
+
+.post-stats-empty__text {
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+.post-stats-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.post-stats-item {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  transition: background-color 0.15s ease;
+  border-top: 1px solid rgba(0, 0, 0, 0.15);
+  padding: 8px 0;
+  min-width: 0;
+}
+
+.post-stats-item_posted {
+  background: #f7f7f7;
+  padding: 8px;
+  border: 0;
+  margin-top: 8px;
+  border-radius: 12px;
+}
+
+.post-stats-item:first-child {
+  border-top: none;
+}
+
+.post-stats-item_posted:first-child {
+  margin-top: 0;
+}
+
+.post-stats-item__main {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  column-gap: 12px;
+  min-width: 0;
+}
+
+.post-stats-item__left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.post-stats-item__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  object-fit: cover;
+}
+
+.post-stats-item__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.post-stats-item__title {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.post-stats-item__subtitle {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.post-stats-msg-card {
   margin-bottom: 12px;
   display: flex;
   flex-direction: column;
@@ -8,13 +235,13 @@
   gap: 12px;
 }
 
-.channels-msg-card__title {
+.post-stats-msg-card__title {
   font-size: 20px;
   font-weight: 500;
   color: #0e315b;
 }
 
-.channels-msg-card__body {
+.post-stats-msg-card__body {
   font-size: 14px;
   font-weight: 400;
   color: #222222;
@@ -26,18 +253,18 @@
   overflow: hidden;
 }
 
-.channels-msg-card__body p {
+.post-stats-msg-card__body p {
   margin: 0;
 }
 
-.channels-stats-card__grid {
+.post-stats-summary__grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 6px;
   width: 100%;
 }
 
-.channels-stats-card__item {
+.post-stats-summary__item {
   height: 60px;
   background: #f7f7f7;
   border-radius: 8px;
@@ -49,7 +276,7 @@
   box-sizing: border-box;
 }
 
-.channels-stats-card__item-title {
+.post-stats-summary__item-title {
   margin-top: 8px;
   font-size: 10px;
   line-height: 1;
@@ -58,7 +285,7 @@
   opacity: 0.5;
 }
 
-.channels-stats-card__item-value {
+.post-stats-summary__item-value {
   margin-top: 6px;
   font-size: 24px;
   line-height: 1.1;
@@ -66,7 +293,7 @@
   color: #2b79d6;
 }
 
-.channels-stats-card__subtitle {
+.post-stats-summary__subtitle {
   font-size: 14px;
   font-weight: 400;
   color: #222222;
@@ -75,16 +302,15 @@
   margin: 0 auto;
 }
 
-.channels-item-stats {
+.post-stats-channel-grid {
   margin-top: 12px;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 6px;
 }
 
-.channels-item-stats__cell {
+.post-stats-channel-grid__cell {
   height: 43px;
-  background: #f7f7f7;
   border-radius: 8px;
   padding: 8px;
   display: flex;
@@ -92,9 +318,15 @@
   align-items: center;
   text-align: center;
   box-sizing: border-box;
+  background: #ffffff;
 }
 
-.channels-item-stats__title {
+.post-stats-channel-grid__cell:first-child {
+  border: 1px solid #2b79d633;
+  background-color: transparent;
+}
+
+.post-stats-channel-grid__title {
   font-size: 9px;
   line-height: 10px;
   font-weight: 400;
@@ -102,7 +334,7 @@
   opacity: 0.5;
 }
 
-.channels-item-stats__value {
+.post-stats-channel-grid__value {
   margin-top: 2px;
   font-size: 14px;
   line-height: 16px;
@@ -110,7 +342,7 @@
   color: #2b79d6;
 }
 
-.channels-item-action {
+.post-stats-channel-action {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -127,16 +359,15 @@
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.channels-item-action__text {
+.post-stats-channel-action__text {
   line-height: 1;
   font-size: 8px;
   font-weight: 400;
 }
 
-.channels-item-action__arrow {
+.post-stats-channel-action__arrow {
   display: block;
   width: 6px;
   height: 6px;
   object-fit: contain;
 }
-
