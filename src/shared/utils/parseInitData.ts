@@ -6,10 +6,37 @@ import { getInitData } from "@/app/providers/AuthProvider";
  */
 export function getStartParam(): string | null {
   const initData = getInitData();
-  console.log('initData', initData)
   if (!initData) return null;
   const params = new URLSearchParams(initData);
   const startParam = params.get("start_param");
-  console.log('startParam', startParam)
   return startParam && startParam.trim() !== "" ? startParam.trim() : null;
 }
+
+type InitDataUser = {
+  id: number | string;
+  [key: string]: unknown;
+};
+
+/**
+ * Возвращает user.id из initData (параметр user — JSON-строка).
+ * Если данных нет или формат неожиданный — возвращает null.
+ */
+export function getUserIdFromInitData(): string | null {
+  const initData = getInitData();
+  if (!initData) return null;
+
+  const params = new URLSearchParams(initData);
+  const userRaw = params.get("user");
+  if (!userRaw) return null;
+
+  try {
+    const user = JSON.parse(userRaw) as InitDataUser;
+    if (user && (typeof user.id === "number" || typeof user.id === "string")) {
+      return String(user.id);
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
