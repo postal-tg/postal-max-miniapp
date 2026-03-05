@@ -5,11 +5,23 @@ import { ChannelStatsPage } from "../pages/ChannelStatsPage/ChannelStatsPage";
 import { PostStatsPage } from "../pages/ReachPage/PostStatsPage";
 import { FollowerExtensionPage } from "../pages/FollowerExtensionPage/FollowerExtensionPage";
 import { Layout } from "@/shared/ui/Layout/Layout";
-import { getStartParam } from "@/shared/utils/parseInitData";
+import { getStartParam, getUserIdFromInitData } from "@/shared/utils/parseInitData";
 
 function LandingRedirect() {
   const startParam = getStartParam();
   if (startParam?.startsWith("fe_")) {
+    const userId = getUserIdFromInitData();
+    const followerExtensionUuid = startParam.slice("fe_".length).trim();
+
+    if (userId && followerExtensionUuid) {
+      return (
+        <Navigate
+          to={`/users/${encodeURIComponent(userId)}/${encodeURIComponent(followerExtensionUuid)}`}
+          replace
+        />
+      );
+    }
+
     return (
       <Navigate
         to={`/follower-extension?start_param=${encodeURIComponent(startParam)}`}
@@ -37,6 +49,10 @@ export function AppRouter() {
             <Route path="/channels/:id" element={<ChannelStatsPage />} />
             <Route path="/reach" element={<PostStatsPage />} />
             <Route path="/follower-extension" element={<FollowerExtensionPage />} />
+            <Route
+              path="/users/:userId/:followerExtensionUuid"
+              element={<FollowerExtensionPage />}
+            />
           </Route>
         </Routes>
       </AuthProvider>

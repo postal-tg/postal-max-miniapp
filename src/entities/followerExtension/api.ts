@@ -17,7 +17,7 @@ export const followerExtensionApi = {
       });
     }
 
-    const url = `${API_BASE_URL}/webapp/users/${encodeURIComponent(
+    const url = `${API_BASE_URL}/max/channels/webapp/users/${encodeURIComponent(
       userId
     )}/${encodeURIComponent(followerExtensionUuid)}`;
 
