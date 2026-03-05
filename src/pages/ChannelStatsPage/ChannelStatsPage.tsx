@@ -88,7 +88,7 @@ export function ChannelStatsPage() {
             <div className="stats-title-row">
               <div className="stats-title">Общая статистика</div>
               <div className="stats-period">
-                {formatRuShortDate(stats.summary.period.from)} –
+                {formatRuShortDate(stats.summary.period.from)}{" - "}
                 {formatRuShortDate(stats.summary.period.to)}
               </div>
             </div>
@@ -166,19 +166,17 @@ export function ChannelStatsPage() {
             <div className="stats-title-row">
               <div className="stats-title">Количество подписчиков</div>
               <div className="stats-period">
-                {formatRuShortDate(stats.summary.period.from)} –
+                {formatRuShortDate(stats.summary.period.from)}{" - "}
                 {formatRuShortDate(stats.summary.period.to)}
               </div>
             </div>
             <div className="stats-chart-wrapper">
-              <ResponsiveContainer width="100%" height={160}>
-                <LineChartBase
-                  data={stats.growthChart.points}
-                  lines={[{ dataKey: "totalSubscribers", color: "#3b82f6" }]}
-                  period={stats.summary.period}
-                  tooltipContent={<GrowthTooltip />}
-                />
-              </ResponsiveContainer>
+              <LineChartBase
+                data={stats.growthChart.points}
+                lines={[{ dataKey: "totalSubscribers", color: "#3b82f6" }]}
+                period={stats.summary.period}
+                tooltipContent={<GrowthTooltip />}
+              />
             </div>
           </section>
 
@@ -187,19 +185,17 @@ export function ChannelStatsPage() {
             <div className="stats-title-row">
               <div className="stats-title">Динамика подписчиков</div>
               <div className="stats-period">
-                {formatRuShortDate(stats.summary.period.from)} –
+                {formatRuShortDate(stats.summary.period.from)}{" - "}
                 {formatRuShortDate(stats.summary.period.to)}
               </div>
             </div>
             <div className="stats-chart-wrapper">
-              <ResponsiveContainer width="100%" height={180}>
-                <LineChartBase
-                  data={stats.subscribersChart.points}
-                  lines={chartLines}
-                  period={stats.summary.period}
-                  tooltipContent={<SubscribersTooltip />}
-                />
-              </ResponsiveContainer>
+              <LineChartBase
+                data={stats.subscribersChart.points}
+                lines={chartLines}
+                period={stats.summary.period}
+                tooltipContent={<SubscribersTooltip />}
+              />
             </div>
             <div className="stats-legend-badges">
               <span
@@ -224,19 +220,17 @@ export function ChannelStatsPage() {
             <div className="stats-title-row">
               <div className="stats-title">Охват канала</div>
               <div className="stats-period">
-                {formatRuShortDate(stats.summary.period.from)} –
+                {formatRuShortDate(stats.summary.period.from)}{" - "}
                 {formatRuShortDate(stats.summary.period.to)}
               </div>
             </div>
             <div className="stats-chart-wrapper">
-              <ResponsiveContainer width="100%" height={180}>
-                <LineChartBase
-                  data={stats.reachChart.points[REACH_CONFIG[range].statsKey]}
-                  lines={[{ dataKey: "reach", color: "#3b82f6" }]}
-                  period={stats.summary.period}
-                  tooltipContent={<ChartsTooltip />}
-                />
-              </ResponsiveContainer>
+              <LineChartBase
+                data={stats.reachChart.points[REACH_CONFIG[range].statsKey]}
+                lines={[{ dataKey: "reach", color: "#2B79D6" }]}
+                period={stats.summary.period}
+                tooltipContent={<ChartsTooltip />}
+              />
             </div>
             <div className="stats-toggle-wrapper">
               <div className="stats-range-toggle_bottom">

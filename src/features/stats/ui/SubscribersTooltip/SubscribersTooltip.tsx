@@ -23,13 +23,13 @@ export function SubscribersTooltip({ active, label, payload }: SubscribersToolti
       <div className="tooltip-date">{formatRuWeekdayShortDate(label as string)}</div>
       <div className="tooltip-row">
         <span className="tooltip-label">Подписалось</span>
-        <span className="tooltip-value tooltip-pos">
+        <span className="tooltip-value tooltip-value_pos">
           {Number(item.payload?.subscribed).toLocaleString("ru-RU")}
         </span>
       </div>
       <div className="tooltip-row">
         <span className="tooltip-label">Отписалось</span>
-        <span className="tooltip-value tooltip-neg">
+        <span className="tooltip-value tooltip-value_neg">
           {Number(item.payload?.unsubscribed).toLocaleString("ru-RU")}
         </span>
       </div>
