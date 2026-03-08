@@ -80,11 +80,7 @@ export function FollowerExtensionPage() {
 
   const content = (() => {
     if (isLoading) {
-      return (
-        <p className="follower-ext-text">
-          Загрузка данных расширения подписчика...
-        </p>
-      );
+      return null;
     }
 
     if (error) {
@@ -117,3 +113,4 @@ export function FollowerExtensionPage() {
     </div>
   );
 }
+
