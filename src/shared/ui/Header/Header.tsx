@@ -30,16 +30,13 @@ export const Header = () => (
         </clipPath>
       </defs>
     </svg>
-    <div className="header-text">
-      <span>Postal</span> —{" "}
-      <a
-        className="header-link"
-        href="https://max.ru/postal_robot"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        @postal_robot
-      </a>
-    </div>
+    <a
+      className="header-text header-link"
+      href="https://max.ru/postal_robot"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <span>Postal</span> — @postal_robot
+    </a>
   </div>
 );
