@@ -17,3 +17,7 @@
 .header-text span {
   color: #2b79d6;
 }
+
+.header-link {
+  color: inherit;
+}

@@ -31,7 +31,15 @@ export const Header = () => (
       </defs>
     </svg>
     <div className="header-text">
-      <span>Postal</span> — @postal_robot
+      <span>Postal</span> —{" "}
+      <a
+        className="header-link"
+        href="https://max.ru/postal_robot"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        @postal_robot
+      </a>
     </div>
   </div>
 );
