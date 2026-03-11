@@ -26,14 +26,14 @@
   min-height: 12px;
   box-sizing: border-box;
   text-align: left;
-  font-size: 14px;
+  font-size: 18px;
   line-height: 1.3;
   color: #222222;
   opacity: 0.8;
 }
 
 .follower-ext-link {
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 400;
   color: #3a6ed6;
   text-decoration: none;
