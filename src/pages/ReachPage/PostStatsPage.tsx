@@ -13,26 +13,22 @@ import { formatViewsCount } from "@/shared/utils/formatNumbers";
 function linkify(text: string) {
   if (!text) return "";
 
-  // Находим существующие <a>...</a>, чтобы не трогать их
   const anchorTagRegex = /<a[\s\S]*?<\/a>/g;
-
   const anchors: string[] = [];
 
-  // Заменяем <a>...</a> на плейсхолдеры
   const placeholderText = text.replace(anchorTagRegex, (match) => {
     anchors.push(match);
     return `__ANCHOR_PLACEHOLDER_${anchors.length - 1}__`;
   });
 
-  // Превращаем обычные ссылки в <a>
   const urlRegex = /(https?:\/\/[^\s]+)/g;
   const processed = placeholderText.replace(urlRegex, (url) => {
     return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
   });
 
-  // Возвращаем <a>...</a> обратно
   return processed.replace(/__ANCHOR_PLACEHOLDER_(\d+)__/g, (_, index) => anchors[index]);
 }
+
 function preserveLineBreaks(text: string) {
   return text.replace(/\n/g, "<br/>");
 }
