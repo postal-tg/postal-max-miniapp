@@ -251,6 +251,10 @@
   display: block;
   overflow: visible;
   white-space: normal;
+
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .post-stats-msg-card__body p {
