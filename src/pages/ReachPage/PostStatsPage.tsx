@@ -10,6 +10,29 @@ import cancelIcon from "@/assets/images/cancel.png";
 import arrowIcon from "@/assets/images/arrow.png";
 import { formatViewsCount } from "@/shared/utils/formatNumbers";
 
+function linkify(text: string) {
+  if (!text) return "";
+
+  const anchorTagRegex = /<a[\s\S]*?<\/a>/g;
+  const anchors: string[] = [];
+
+  const placeholderText = text.replace(anchorTagRegex, (match) => {
+    anchors.push(match);
+    return `__ANCHOR_PLACEHOLDER_${anchors.length - 1}__`;
+  });
+
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const processed = placeholderText.replace(urlRegex, (url) => {
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+  });
+
+  return processed.replace(/__ANCHOR_PLACEHOLDER_(\d+)__/g, (_, index) => anchors[index]);
+}
+
+function preserveLineBreaks(text: string) {
+  return text.replace(/\n/g, "<br/>");
+}
+
 function formatDueTimeRu(dueTime: string): string {
   const date = new Date(dueTime);
   if (Number.isNaN(date.getTime())) return "";
@@ -145,9 +168,7 @@ export function PostStatsPage() {
             </div>
           </div>
           {formattedDueTime && (
-            <div className="post-stats-summary__subtitle">
-              Ваш пост вышел {formattedDueTime}
-            </div>
+            <div className="post-stats-summary__subtitle">Ваш пост вышел {formattedDueTime}</div>
           )}
         </div>
       ) : (
@@ -156,9 +177,7 @@ export function PostStatsPage() {
           {formattedDueTime && (
             <div className="post-stats-hero__text">
               <div className="post-stats-hero__title">Ваш пост еще не вышел</div>
-              <div className="post-stats-hero__subtitle">
-                Пост выйдет {formattedDueTime}
-              </div>
+              <div className="post-stats-hero__subtitle">Пост выйдет {formattedDueTime}</div>
             </div>
           )}
         </div>
@@ -169,7 +188,9 @@ export function PostStatsPage() {
           <div className="post-stats-msg-card__title">Ваш пост</div>
           <div
             className="post-stats-msg-card__body"
-            dangerouslySetInnerHTML={{ __html: msgText }}
+            dangerouslySetInnerHTML={{
+              __html: linkify(preserveLineBreaks(msgText || "")),
+            }}
           />
         </div>
       )}
@@ -212,9 +233,7 @@ export function PostStatsPage() {
           )}
         </header>
 
-        {error && (
-          <div className="post-stats-status post-stats-status_error">{error}</div>
-        )}
+        {error && <div className="post-stats-status post-stats-status_error">{error}</div>}
 
         {!error && !isLoading && !hasChannels && (
           <div className="post-stats-empty">
@@ -236,7 +255,11 @@ export function PostStatsPage() {
               >
                 <div className="post-stats-item__main">
                   <div className="post-stats-item__left">
-                    <img src={channel.avatarUrl} alt={channel.title} className="post-stats-item__avatar" />
+                    <img
+                      src={channel.avatarUrl}
+                      alt={channel.title}
+                      className="post-stats-item__avatar"
+                    />
                     <div className="post-stats-item__text">
                       <div className="post-stats-item__title">{channel.title}</div>
                       <div className="post-stats-item__subtitle">
@@ -304,4 +327,3 @@ export function PostStatsPage() {
     </div>
   );
 }
-
