@@ -247,10 +247,10 @@
   color: #222222;
   opacity: 0.8;
   line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+
+  display: block;
+  overflow: visible;
+  white-space: normal;
 }
 
 .post-stats-msg-card__body p {
@@ -356,7 +356,9 @@
   text-decoration: none;
   cursor: pointer;
   flex-shrink: 0;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .post-stats-channel-action__text {
