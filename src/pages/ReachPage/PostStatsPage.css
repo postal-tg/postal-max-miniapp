@@ -247,14 +247,33 @@
   color: #222222;
   opacity: 0.8;
   line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+
+  display: block;
+  overflow: visible;
+  white-space: normal;
+
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .post-stats-msg-card__body p {
   margin: 0;
+}
+
+.post-stats-msg-card__body a {
+  color: #2b79d6;
+  text-decoration: underline;
+}
+
+.post-stats-msg-card__body {
+  line-height: 1.6;
+}
+
+.post-stats-msg-card__body br {
+  display: block;
+  margin-bottom: 8px;
+  content: "";
 }
 
 .post-stats-summary__grid {
@@ -356,7 +375,9 @@
   text-decoration: none;
   cursor: pointer;
   flex-shrink: 0;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .post-stats-channel-action__text {
