@@ -143,7 +143,7 @@ export function PostStatsPage() {
           <div className="post-stats-msg-card__title">Статистика просмотров</div>
           <div className="post-stats-summary__grid">
             <div className="post-stats-summary__item">
-              <div className="post-stats-summary__item-title">Сейчас</div>
+              <div className="post-stats-summary__item-title">Всего</div>
               <div className="post-stats-summary__item-value">
                 {totalViews.currentViews != null ? formatViewsCount(totalViews.currentViews) : "—"}
               </div>
@@ -286,7 +286,7 @@ export function PostStatsPage() {
                 {duePassed && (
                   <div className="post-stats-channel-grid">
                     <div className="post-stats-channel-grid__cell">
-                      <div className="post-stats-channel-grid__title">Сейчас</div>
+                      <div className="post-stats-channel-grid__title">Всего</div>
                       <div className="post-stats-channel-grid__value">
                         {channel.reach.currentViews.count != null
                           ? formatViewsCount(channel.reach.currentViews.count)
