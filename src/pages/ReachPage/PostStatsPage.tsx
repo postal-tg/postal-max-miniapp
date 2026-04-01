@@ -159,7 +159,7 @@ export function PostStatsPage() {
         <div className="post-stats-msg-card card-block">
           <div className="post-stats-msg-card__title">Статистика просмотров</div>
           <div className="post-stats-summary__grid">
-              <div className="post-stats-summary__item">
+          <div className="post-stats-summary__item">
               <div className="post-stats-summary__item-title">Сейчас</div>
               <div className="post-stats-summary__item-value">
                 {formatPeriodValue(totalViews.currentViews, dueTime)}
