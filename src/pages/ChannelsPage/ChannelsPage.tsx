@@ -93,9 +93,9 @@ export function ChannelsPage() {
 
         {!error && channels !== null && filtered.length === 0 && (
           <div className="channels-empty">
-            <div className="channels-empty-title">У вас пока нет ни 1 канала</div>
+            <div className="channels-empty-title">Каналов с таким названием нет</div>
             <div className="channels-empty-text">
-              Создайте новый канал или подключите существующий и он появится в этом меню
+              Убедитесь в правильности ввода
             </div>
           </div>
         )}
