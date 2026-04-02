@@ -52,6 +52,23 @@ function isDueTimePassed(dueTime: string | null): boolean {
   return !Number.isNaN(date.getTime()) && date.getTime() <= Date.now();
 }
 
+function isPeriodStatsReady(dueTime: string | null, hours: number): boolean {
+  if (!dueTime) return true;
+  const date = new Date(dueTime);
+  if (Number.isNaN(date.getTime())) return true;
+  return date.getTime() + hours * 60 * 60 * 1000 <= Date.now();
+}
+
+function formatPeriodValue(
+  count: number | null,
+  dueTime: string | null,
+  hours?: number
+): string {
+  if (count == null) return "—";
+  if (hours != null && !isPeriodStatsReady(dueTime, hours)) return "—";
+  return formatViewsCount(count);
+}
+
 export function PostStatsPage() {
   const [searchParams] = useSearchParams();
   const postId = searchParams.get("post_id");
@@ -145,25 +162,25 @@ export function PostStatsPage() {
             <div className="post-stats-summary__item">
               <div className="post-stats-summary__item-title">Сейчас</div>
               <div className="post-stats-summary__item-value">
-                {totalViews.currentViews != null ? formatViewsCount(totalViews.currentViews) : "—"}
+                {formatPeriodValue(totalViews.currentViews, dueTime)}
               </div>
             </div>
             <div className="post-stats-summary__item">
               <div className="post-stats-summary__item-title">24 часа</div>
               <div className="post-stats-summary__item-value">
-                {totalViews.last24Hours != null ? formatViewsCount(totalViews.last24Hours) : "—"}
+                {formatPeriodValue(totalViews.last24Hours, dueTime, 24)}
               </div>
             </div>
             <div className="post-stats-summary__item">
               <div className="post-stats-summary__item-title">48 часов</div>
               <div className="post-stats-summary__item-value">
-                {totalViews.last48Hours != null ? formatViewsCount(totalViews.last48Hours) : "—"}
+                {formatPeriodValue(totalViews.last48Hours, dueTime, 48)}
               </div>
             </div>
             <div className="post-stats-summary__item">
               <div className="post-stats-summary__item-title">72 часа</div>
               <div className="post-stats-summary__item-value">
-                {totalViews.last72Hours != null ? formatViewsCount(totalViews.last72Hours) : "—"}
+                {formatPeriodValue(totalViews.last72Hours, dueTime, 72)}
               </div>
             </div>
           </div>
@@ -288,33 +305,25 @@ export function PostStatsPage() {
                     <div className="post-stats-channel-grid__cell">
                       <div className="post-stats-channel-grid__title">Сейчас</div>
                       <div className="post-stats-channel-grid__value">
-                        {channel.reach.currentViews.count != null
-                          ? formatViewsCount(channel.reach.currentViews.count)
-                          : "—"}
+                        {formatPeriodValue(channel.reach.currentViews.count, dueTime)}
                       </div>
                     </div>
                     <div className="post-stats-channel-grid__cell">
                       <div className="post-stats-channel-grid__title">24 часа</div>
                       <div className="post-stats-channel-grid__value">
-                        {channel.reach.last24hours.count != null
-                          ? formatViewsCount(channel.reach.last24hours.count)
-                          : "—"}
+                        {formatPeriodValue(channel.reach.last24hours.count, dueTime, 24)}
                       </div>
                     </div>
                     <div className="post-stats-channel-grid__cell">
                       <div className="post-stats-channel-grid__title">48 часов</div>
                       <div className="post-stats-channel-grid__value">
-                        {channel.reach.last48hours.count != null
-                          ? formatViewsCount(channel.reach.last48hours.count)
-                          : "—"}
+                        {formatPeriodValue(channel.reach.last48hours.count, dueTime, 48)}
                       </div>
                     </div>
                     <div className="post-stats-channel-grid__cell">
                       <div className="post-stats-channel-grid__title">72 часа</div>
                       <div className="post-stats-channel-grid__value">
-                        {channel.reach.last72hours.count != null
-                          ? formatViewsCount(channel.reach.last72hours.count)
-                          : "—"}
+                        {formatPeriodValue(channel.reach.last72hours.count, dueTime, 72)}
                       </div>
                     </div>
                   </div>
