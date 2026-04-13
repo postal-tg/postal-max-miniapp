@@ -5,6 +5,29 @@ import { followerExtensionApi } from "@/entities/followerExtension/api";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { getUserIdFromInitData } from "@/shared/utils/parseInitData";
 
+function linkify(text: string) {
+  if (!text) return "";
+
+  const anchorTagRegex = /<a[\s\S]*?<\/a>/g;
+  const anchors: string[] = [];
+
+  const placeholderText = text.replace(anchorTagRegex, (match) => {
+    anchors.push(match);
+    return `__ANCHOR_PLACEHOLDER_${anchors.length - 1}__`;
+  });
+
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const processed = placeholderText.replace(urlRegex, (url) => {
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+  });
+
+  return processed.replace(/__ANCHOR_PLACEHOLDER_(\d+)__/g, (_, index) => anchors[index]);
+}
+
+function preserveLineBreaks(text: string) {
+  return text.replace(/\n/g, "<br/>");
+}
+
 export function FollowerExtensionPage() {
   const { isAuthenticated, isLoading: isAuthLoading, error: authError } = useAuth();
   const [searchParams] = useSearchParams();
@@ -102,7 +125,9 @@ export function FollowerExtensionPage() {
     return (
       <div
         className="follower-ext-text"
-        dangerouslySetInnerHTML={{ __html: msgHtml }}
+        dangerouslySetInnerHTML={{
+          __html: linkify(preserveLineBreaks(msgHtml)),
+        }}
       />
     );
   })();
