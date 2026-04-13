@@ -30,17 +30,32 @@
   line-height: 1.3;
   color: #222222;
   opacity: 0.8;
-  white-space: pre-line;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
-.follower-ext-link {
+.follower-ext-text p {
+  margin: 0;
+}
+
+.follower-ext-text br {
+  display: block;
+  margin-bottom: 8px;
+  content: "";
+}
+
+.follower-ext-link,
+.follower-ext-text a {
   font-size: 18px;
   font-weight: 400;
   color: #3a6ed6;
-  text-decoration: none;
+  text-decoration: underline;
 }
 
-.follower-ext-link:hover {
+.follower-ext-link:hover,
+.follower-ext-text a:hover {
   text-decoration: underline;
 }
 
