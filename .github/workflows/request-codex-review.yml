@@ -1,0 +1,43 @@
+name: Request Codex review
+
+on:
+  pull_request_target:
+    types:
+      - review_requested
+
+jobs:
+  request-codex-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      CODEX_REVIEW_TOKEN: ${{ secrets.CODEX_REVIEW_TOKEN }}
+
+    steps:
+      - name: Verify Codex review token
+        if: ${{ env.CODEX_REVIEW_TOKEN == '' }}
+        run: |
+          echo "::error::Set the CODEX_REVIEW_TOKEN repository secret to a GitHub token from Zonix01."
+          exit 1
+
+      - name: Ask Codex to review PR
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ env.CODEX_REVIEW_TOKEN }}
+          script: |
+            const requestedReviewer = context.payload.requested_reviewer;
+            const reviewer = requestedReviewer && requestedReviewer.login
+              ? requestedReviewer.login.toLowerCase()
+              : '';
+
+            if (reviewer !== 'zonix01') {
+              core.info('Requested reviewer is not Zonix01, skipping.');
+              return;
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: '@codex review\n\nCheck this pull request against the task in the PR description. Focus on correctness, regressions, and unrelated changes.'
+            });
