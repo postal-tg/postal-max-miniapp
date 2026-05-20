@@ -39,5 +39,5 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.payload.pull_request.number,
-              body: '@codex review\n\nCheck this pull request against the task in the PR description. Focus on correctness, regressions, and unrelated changes.'
+              body: '@codex review\n\nCheck this pull request against the task in the PR description. Focus on correctness, regressions, and unrelated changes. If you find review issues, include priority labels such as [P1] or [P2] in the finding text.'
             });
