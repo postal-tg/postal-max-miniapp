@@ -7,7 +7,7 @@ on:
 
 jobs:
   codex-review-decision:
-    if: ${{ github.event.review.user.login == 'chatgpt-codex-connector[bot]' }}
+    if: ${{ github.event.review.user.login == 'chatgpt-codex-connector[bot]' || github.event.review.user.login == 'chatgpt-codex-connector' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -78,9 +78,10 @@ jobs:
             }
 
             const event = shouldRequestChanges ? 'REQUEST_CHANGES' : 'APPROVE';
+            const verdict = shouldRequestChanges ? 'REQUEST_CHANGES' : 'APPROVE';
             const body = shouldRequestChanges
-              ? 'Codex review found P0/P1/P2 findings, so changes are requested.'
-              : 'Codex review completed without P0/P1/P2 findings, so this pull request is approved.';
+              ? 'Verdict: REQUEST_CHANGES\n\nCodex review found P0/P1/P2 findings, so changes are requested.'
+              : 'Verdict: APPROVE\n\nCodex review completed without P0/P1/P2 findings, so this pull request is approved.';
 
             if (tokenUserLower === prAuthorLower) {
               await github.rest.pulls.createReview({
@@ -88,7 +89,7 @@ jobs:
                 repo,
                 pull_number: pr.number,
                 event: 'COMMENT',
-                body: `${body}\n\nGitHub does not allow ${tokenUser} to approve or request changes on their own pull request.`
+                body: `Verdict: ${verdict}\n\n${body}\n\nGitHub does not allow ${tokenUser} to approve or request changes on their own pull request, so this verdict is recorded as a comment.`
               });
               return;
             }
