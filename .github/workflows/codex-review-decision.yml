@@ -1,0 +1,102 @@
+name: Codex review decision
+
+on:
+  pull_request_review:
+    types:
+      - submitted
+
+jobs:
+  codex-review-decision:
+    if: ${{ github.event.review.user.login == 'chatgpt-codex-connector[bot]' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      CODEX_REVIEW_TOKEN: ${{ secrets.CODEX_REVIEW_TOKEN }}
+
+    steps:
+      - name: Verify Codex review token
+        if: ${{ env.CODEX_REVIEW_TOKEN == '' }}
+        run: |
+          echo "::error::Set the CODEX_REVIEW_TOKEN repository secret to a GitHub token from Zonix01."
+          exit 1
+
+      - name: Approve or request changes from Codex findings
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ env.CODEX_REVIEW_TOKEN }}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pr = context.payload.pull_request;
+            const codexReview = context.payload.review;
+
+            if (!pr || !codexReview) {
+              core.info('This event does not include a pull request review payload.');
+              return;
+            }
+
+            const { data: viewer } = await github.rest.users.getAuthenticated();
+            const tokenUser = viewer.login;
+            const tokenUserLower = tokenUser.toLowerCase();
+            const prAuthorLower = pr.user.login.toLowerCase();
+
+            const comments = await github.paginate(github.rest.pulls.listCommentsForReview, {
+              owner,
+              repo,
+              pull_number: pr.number,
+              review_id: codexReview.id,
+              per_page: 100
+            });
+
+            const texts = [codexReview.body || '', ...comments.map((comment) => comment.body || '')];
+            const blockingPriorityPattern = /(^|\n)\s*(?:[-*]\s*)?(?:\*\*)?\[?P[0-2]\]?\s*[:\]-]/i;
+            const bracketPriorityPattern = /\[(?:P0|P1|P2)\]/i;
+            const hasBlockingPriority = texts.some((text) =>
+              blockingPriorityPattern.test(text) || bracketPriorityPattern.test(text)
+            );
+            const codexRequestedChanges = String(codexReview.state || '').toUpperCase() === 'CHANGES_REQUESTED';
+            const shouldRequestChanges = codexRequestedChanges || hasBlockingPriority;
+
+            const reviews = await github.paginate(github.rest.pulls.listReviews, {
+              owner,
+              repo,
+              pull_number: pr.number,
+              per_page: 100
+            });
+            const codexSubmittedAt = Date.parse(codexReview.submitted_at || codexReview.updated_at || codexReview.created_at || 0);
+            const alreadyDecided = reviews.some((review) => {
+              const sameUser = review.user && review.user.login && review.user.login.toLowerCase() === tokenUserLower;
+              const state = String(review.state || '').toUpperCase();
+              const submittedAt = Date.parse(review.submitted_at || review.updated_at || review.created_at || 0);
+              return sameUser && submittedAt >= codexSubmittedAt && ['APPROVED', 'CHANGES_REQUESTED'].includes(state);
+            });
+
+            if (alreadyDecided) {
+              core.info(`${tokenUser} already submitted a decision after this Codex review.`);
+              return;
+            }
+
+            const event = shouldRequestChanges ? 'REQUEST_CHANGES' : 'APPROVE';
+            const body = shouldRequestChanges
+              ? 'Codex review found P0/P1/P2 findings, so changes are requested.'
+              : 'Codex review completed without P0/P1/P2 findings, so this pull request is approved.';
+
+            if (tokenUserLower === prAuthorLower) {
+              await github.rest.pulls.createReview({
+                owner,
+                repo,
+                pull_number: pr.number,
+                event: 'COMMENT',
+                body: `${body}\n\nGitHub does not allow ${tokenUser} to approve or request changes on their own pull request.`
+              });
+              return;
+            }
+
+            await github.rest.pulls.createReview({
+              owner,
+              repo,
+              pull_number: pr.number,
+              event,
+              body
+            });
