@@ -69,7 +69,7 @@ jobs:
               body: [
                 '@codex review',
                 '',
-                'Check this pull request against the task in the PR description. If the PR description contains a "Notion task snapshot for Codex" section, use that section as the task source of truth.',
+                'Check this pull request against the task in the PR description. If the PR description contains a "Notion task snapshot for Codex" section, use that section as the task source of truth, including its Notion comments section.',
                 '',
                 'Review the entire PR and every changed file. Do not stop after the first finding or after two comments. Report every P0/P1/P2 issue you can identify, with priority labels such as [P1] or [P2]. Use inline comments where possible.',
                 '',
@@ -138,8 +138,9 @@ jobs:
                   continue;
                 }
 
+                const pageId = formatUuid(id);
+
                 try {
-                  const pageId = formatUuid(id);
                   const page = await notionGet(`pages/${pageId}`, notionToken);
                   const title = getPageTitle(page);
                   const markdown = await getNotionMarkdown(pageId, notionToken);
@@ -150,12 +151,14 @@ jobs:
                   }
                   lines.push('');
                   lines.push(markdown || '(The Notion page has no readable body content.)');
+                  await appendNotionComments(lines, pageId, notionToken);
                 } catch (markdownError) {
                   try {
-                    const fallbackLines = await getBlockText(formatUuid(id), notionToken, 0);
+                    const fallbackLines = await getBlockText(pageId, notionToken, 0);
                     lines.push('Status: fetched from Notion block API fallback.');
                     lines.push('');
                     lines.push(fallbackLines.join('\n') || '(The Notion page has no readable body content.)');
+                    await appendNotionComments(lines, pageId, notionToken);
                   } catch (fallbackError) {
                     const safeMessage = summarizeNotionError(markdownError, fallbackError);
                     lines.push(`Status: unavailable - ${safeMessage}`);
@@ -226,6 +229,120 @@ jobs:
               return lines;
             }
 
+            async function appendNotionComments(lines, pageId, notionToken) {
+              lines.push('');
+              lines.push('#### Notion comments');
+
+              try {
+                const result = await getNotionCommentsForTask(pageId, notionToken);
+
+                if (result.comments.length === 0) {
+                  lines.push('No open comments found by the Notion API.');
+                } else {
+                  for (const comment of result.comments) {
+                    lines.push(formatNotionComment(comment));
+                  }
+                }
+
+                if (result.blockScanError) {
+                  lines.push(`Comment scan note: ${result.blockScanError}`);
+                }
+              } catch (error) {
+                lines.push(`Status: comments unavailable - ${summarizeNotionCommentError(error)}`);
+              }
+            }
+
+            async function getNotionCommentsForTask(pageId, notionToken) {
+              const comments = [];
+              const seenCommentIds = new Set();
+              let blockScanError = '';
+
+              await appendCommentsForBlock(pageId, notionToken, comments, seenCommentIds, 'task page');
+
+              try {
+                const blocks = await collectBlockIds(pageId, notionToken, 0, []);
+                for (const block of blocks.slice(0, 80)) {
+                  if (comments.length >= 120) {
+                    break;
+                  }
+
+                  await appendCommentsForBlock(block.id, notionToken, comments, seenCommentIds, block.label);
+                }
+
+                if (blocks.length > 80) {
+                  blockScanError = `checked first 80 blocks out of ${blocks.length}; very large task pages may have additional inline comments.`;
+                }
+              } catch (error) {
+                blockScanError = `inline comments on child blocks could not be scanned: ${summarizeNotionCommentError(error)}`;
+              }
+
+              return { comments, blockScanError };
+            }
+
+            async function appendCommentsForBlock(blockId, notionToken, comments, seenCommentIds, location) {
+              let startCursor = null;
+
+              do {
+                const params = new URLSearchParams({
+                  block_id: blockId,
+                  page_size: '100'
+                });
+                if (startCursor) {
+                  params.set('start_cursor', startCursor);
+                }
+
+                const data = await notionGet(`comments?${params.toString()}`, notionToken);
+
+                for (const comment of data.results || []) {
+                  if (!comment.id || seenCommentIds.has(comment.id)) {
+                    continue;
+                  }
+
+                  seenCommentIds.add(comment.id);
+                  comments.push({
+                    ...comment,
+                    codex_location: location || 'task page'
+                  });
+                }
+
+                startCursor = data.has_more ? data.next_cursor : null;
+              } while (startCursor);
+            }
+
+            async function collectBlockIds(blockId, notionToken, depth, collected) {
+              if (depth > 3 || collected.length >= 160) {
+                return collected;
+              }
+
+              let startCursor = null;
+
+              do {
+                const suffix = startCursor
+                  ? `?page_size=100&start_cursor=${encodeURIComponent(startCursor)}`
+                  : '?page_size=100';
+                const data = await notionGet(`blocks/${blockId}/children${suffix}`, notionToken);
+
+                for (const block of data.results || []) {
+                  if (collected.length >= 160) {
+                    break;
+                  }
+
+                  collected.push({
+                    id: block.id,
+                    label: blockLabel(block)
+                  });
+
+                  if (block.has_children) {
+                    await collectBlockIds(block.id, notionToken, depth + 1, collected);
+                  }
+                }
+
+                startCursor = data.has_more && collected.length < 160 ? data.next_cursor : null;
+              } while (startCursor);
+
+              return collected;
+            }
+
             function blockToText(block, depth) {
               const type = block.type;
               const value = block[type] || {};
@@ -244,6 +361,27 @@ jobs:
               if (type === 'child_database') return `${prefix}Child database: ${value.title || ''}`;
               if (text) return `${prefix}${text}`;
               return '';
+            }
+
+            function blockLabel(block) {
+              const type = block.type || 'block';
+              const value = block[type] || {};
+              const text = richText(value.rich_text || value.title || []);
+              return text ? `${type}: ${text.slice(0, 80)}` : type;
+            }
+
+            function formatNotionComment(comment) {
+              const createdAt = comment.created_time || 'unknown time';
+              const author = comment.created_by && comment.created_by.name
+                ? comment.created_by.name
+                : comment.created_by && comment.created_by.id
+                  ? comment.created_by.id
+                  : 'unknown user';
+              const location = comment.codex_location || 'task page';
+              const text = richText(comment.rich_text || []);
+              const discussion = comment.discussion_id ? ` discussion=${comment.discussion_id}` : '';
+
+              return `- ${createdAt} ${author} (${location}${discussion}): ${text || '(empty comment)'}`;
             }
 
             function richText(parts) {
@@ -269,6 +407,14 @@ jobs:
               if (/404/.test(message)) return 'Notion page was not found or was not shared with the integration.';
               if (/database|data_source/i.test(message)) return 'the URL appears to point to a database/view instead of a direct task page.';
               return 'Notion content could not be fetched by the workflow.';
+            }
+
+            function summarizeNotionCommentError(error) {
+              const message = error && error.message ? error.message : '';
+              if (/401/.test(message)) return 'Notion token was rejected by the Notion API.';
+              if (/403/.test(message)) return 'Notion integration needs the Read comments capability and access to the task page.';
+              if (/404/.test(message)) return 'Notion page or block was not found or was not shared with the integration.';
+              return 'Notion comments could not be fetched by the workflow.';
             }
 
             function limitSnapshot(text) {
