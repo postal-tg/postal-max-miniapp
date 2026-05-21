@@ -22,7 +22,7 @@ jobs:
           exit 1
 
       - name: Approve or request changes from Codex findings
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           github-token: ${{ env.CODEX_REVIEW_TOKEN }}
           script: |
