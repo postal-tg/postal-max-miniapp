@@ -12,6 +12,7 @@ jobs:
       contents: read
     env:
       CODEX_REVIEW_TOKEN: ${{ secrets.CODEX_REVIEW_TOKEN }}
+      NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
 
     steps:
       - name: Verify Codex review token
@@ -20,7 +21,7 @@ jobs:
           echo "::error::Set the CODEX_REVIEW_TOKEN repository secret to a GitHub token from Zonix01."
           exit 1
 
-      - name: Ask Codex to review PR
+      - name: Attach Notion task and ask Codex to review PR
         uses: actions/github-script@v7
         with:
           github-token: ${{ env.CODEX_REVIEW_TOKEN }}
@@ -35,9 +36,271 @@ jobs:
               return;
             }
 
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pr = context.payload.pull_request;
+            const body = pr.body || '';
+            const bodyWithoutSnapshot = removeNotionSnapshot(body);
+            const notionUrls = extractNotionUrls(bodyWithoutSnapshot).slice(0, 3);
+
+            if (notionUrls.length > 0) {
+              const snapshot = await buildNotionSnapshot(notionUrls, process.env.NOTION_TOKEN || '');
+              const nextBody = upsertNotionSnapshot(body, snapshot);
+
+              if (nextBody !== body) {
+                await github.rest.issues.update({
+                  owner,
+                  repo,
+                  issue_number: pr.number,
+                  body: nextBody
+                });
+                core.info('Attached Notion task snapshot to the PR description.');
+              } else {
+                core.info('Notion task snapshot is already up to date.');
+              }
+            } else {
+              core.info('No Notion task URL found in the PR description.');
+            }
+
             await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.payload.pull_request.number,
-              body: '@codex review\n\nReview the entire pull request, not just the first suspicious files. Inspect every changed file and compare the full implementation against the task in the PR description. If the PR description links to an external task such as Notion and you cannot access its contents, treat that as a [P1] finding and use Verdict: REQUEST_CHANGES. Continue looking after the first findings and report all P0/P1/P2 issues you can find. Prefer inline comments on exact changed lines when possible; if a finding cannot be attached inline, include it in the review summary. Focus on correctness, missing requirements, regressions, edge cases, security, data loss, and unrelated changes. Include priority labels such as [P1] or [P2] in each finding.'
+              owner,
+              repo,
+              issue_number: pr.number,
+              body: [
+                '@codex review',
+                '',
+                'Check this pull request against the task in the PR description. If the PR description contains a "Notion task snapshot for Codex" section, use that section as the task source of truth.',
+                '',
+                'Review the entire PR and every changed file. Do not stop after the first finding or after two comments. Report every P0/P1/P2 issue you can identify, with priority labels such as [P1] or [P2]. Use inline comments where possible.',
+                '',
+                'If a Notion/external task link is present but the task snapshot is missing or says unavailable, treat that as [P1] and request changes because correctness cannot be validated.',
+                '',
+                'Finish with exactly one verdict line: Verdict: APPROVE or Verdict: REQUEST_CHANGES.'
+              ].join('\n')
             });
+
+            function extractNotionUrls(text) {
+              const matches = text.match(/https?:\/\/(?:www\.)?notion\.so\/[^\s<>)"']+/gi) || [];
+              const seen = new Set();
+              const urls = [];
+
+              for (const match of matches) {
+                const cleaned = match.replace(/[.,;:!?]+$/, '');
+                if (!seen.has(cleaned)) {
+                  seen.add(cleaned);
+                  urls.push(cleaned);
+                }
+              }
+
+              return urls;
+            }
+
+            function extractNotionId(url) {
+              const compactUrl = url.replace(/-/g, '');
+              const match = compactUrl.match(/[0-9a-f]{32}/i);
+              return match ? match[0].toLowerCase() : null;
+            }
+
+            function formatUuid(compactId) {
+              return [
+                compactId.slice(0, 8),
+                compactId.slice(8, 12),
+                compactId.slice(12, 16),
+                compactId.slice(16, 20),
+                compactId.slice(20)
+              ].join('-');
+            }
+
+            async function buildNotionSnapshot(urls, notionToken) {
+              const lines = [
+                '### Notion task snapshot for Codex',
+                '',
+                `Fetched: ${new Date().toISOString()}`,
+                ''
+              ];
+
+              if (!notionToken) {
+                lines.push('Status: unavailable - `NOTION_TOKEN` repository secret is not configured.');
+                lines.push('');
+                for (const url of urls) {
+                  lines.push(`Source: ${url}`);
+                }
+                return limitSnapshot(lines.join('\n'));
+              }
+
+              for (let index = 0; index < urls.length; index += 1) {
+                const url = urls[index];
+                const id = extractNotionId(url);
+                lines.push(index === 0 ? `Source: ${url}` : `\nSource: ${url}`);
+
+                if (!id) {
+                  lines.push('Status: unavailable - could not extract a Notion page ID from this URL.');
+                  continue;
+                }
+
+                try {
+                  const pageId = formatUuid(id);
+                  const page = await notionGet(`pages/${pageId}`, notionToken);
+                  const title = getPageTitle(page);
+                  const markdown = await getNotionMarkdown(pageId, notionToken);
+
+                  lines.push('Status: fetched from Notion API.');
+                  if (title) {
+                    lines.push(`Title: ${title}`);
+                  }
+                  lines.push('');
+                  lines.push(markdown || '(The Notion page has no readable body content.)');
+                } catch (markdownError) {
+                  try {
+                    const fallbackLines = await getBlockText(formatUuid(id), notionToken, 0);
+                    lines.push('Status: fetched from Notion block API fallback.');
+                    lines.push('');
+                    lines.push(fallbackLines.join('\n') || '(The Notion page has no readable body content.)');
+                  } catch (fallbackError) {
+                    const safeMessage = summarizeNotionError(markdownError, fallbackError);
+                    lines.push(`Status: unavailable - ${safeMessage}`);
+                    lines.push('Make sure the Notion integration has access to this exact task page and that the PR contains a direct task page link, not only a database view.');
+                  }
+                }
+              }
+
+              return limitSnapshot(lines.join('\n'));
+            }
+
+            async function notionGet(path, notionToken) {
+              const response = await fetch(`https://api.notion.com/v1/${path}`, {
+                headers: {
+                  Authorization: `Bearer ${notionToken}`,
+                  'Notion-Version': '2026-03-11'
+                }
+              });
+
+              const text = await response.text();
+              if (!response.ok) {
+                throw new Error(`Notion API ${response.status}: ${text.slice(0, 500)}`);
+              }
+
+              return text ? JSON.parse(text) : {};
+            }
+
+            async function getNotionMarkdown(pageId, notionToken) {
+              const data = await notionGet(`pages/${pageId}/markdown`, notionToken);
+              const markdown = String(data.markdown || '').trim();
+
+              if (data.truncated && Array.isArray(data.unknown_block_ids) && data.unknown_block_ids.length > 0) {
+                return `${markdown}\n\nNote: Notion reported truncated content with ${data.unknown_block_ids.length} unknown block(s).`;
+              }
+
+              return markdown;
+            }
+
+            async function getBlockText(blockId, notionToken, depth) {
+              if (depth > 3) {
+                return [];
+              }
+
+              const lines = [];
+              let startCursor = null;
+
+              do {
+                const suffix = startCursor
+                  ? `?page_size=100&start_cursor=${encodeURIComponent(startCursor)}`
+                  : '?page_size=100';
+                const data = await notionGet(`blocks/${blockId}/children${suffix}`, notionToken);
+
+                for (const block of data.results || []) {
+                  const line = blockToText(block, depth);
+                  if (line) {
+                    lines.push(line);
+                  }
+
+                  if (block.has_children) {
+                    const childLines = await getBlockText(block.id, notionToken, depth + 1);
+                    lines.push(...childLines);
+                  }
+                }
+
+                startCursor = data.has_more ? data.next_cursor : null;
+              } while (startCursor);
+
+              return lines;
+            }
+
+            function blockToText(block, depth) {
+              const type = block.type;
+              const value = block[type] || {};
+              const prefix = '  '.repeat(depth);
+              const text = richText(value.rich_text || value.title || []);
+
+              if (type === 'heading_1') return `${prefix}# ${text}`;
+              if (type === 'heading_2') return `${prefix}## ${text}`;
+              if (type === 'heading_3') return `${prefix}### ${text}`;
+              if (type === 'bulleted_list_item') return `${prefix}- ${text}`;
+              if (type === 'numbered_list_item') return `${prefix}1. ${text}`;
+              if (type === 'to_do') return `${prefix}- [${value.checked ? 'x' : ' '}] ${text}`;
+              if (type === 'quote') return `${prefix}> ${text}`;
+              if (type === 'code') return `${prefix}\`\`\`${value.language || ''}\n${text}\n${prefix}\`\`\``;
+              if (type === 'child_page') return `${prefix}Child page: ${value.title || ''}`;
+              if (type === 'child_database') return `${prefix}Child database: ${value.title || ''}`;
+              if (text) return `${prefix}${text}`;
+              return '';
+            }
+
+            function richText(parts) {
+              return (parts || []).map((part) => part.plain_text || '').join('').trim();
+            }
+
+            function getPageTitle(page) {
+              for (const property of Object.values(page.properties || {})) {
+                if (property && property.type === 'title') {
+                  const title = richText(property.title || []);
+                  if (title) {
+                    return title;
+                  }
+                }
+              }
+              return '';
+            }
+
+            function summarizeNotionError(primary, fallback) {
+              const message = `${primary && primary.message ? primary.message : ''} ${fallback && fallback.message ? fallback.message : ''}`;
+              if (/401/.test(message)) return 'Notion token was rejected by the Notion API.';
+              if (/403/.test(message)) return 'Notion integration does not have read access to the task page.';
+              if (/404/.test(message)) return 'Notion page was not found or was not shared with the integration.';
+              if (/database|data_source/i.test(message)) return 'the URL appears to point to a database/view instead of a direct task page.';
+              return 'Notion content could not be fetched by the workflow.';
+            }
+
+            function limitSnapshot(text) {
+              const maxLength = 20000;
+              if (text.length <= maxLength) {
+                return text;
+              }
+
+              return `${text.slice(0, maxLength)}\n\n...(snapshot truncated for GitHub PR body size)`;
+            }
+
+            function upsertNotionSnapshot(body, snapshot) {
+              const start = '<!-- codex-notion-task:start -->';
+              const end = '<!-- codex-notion-task:end -->';
+              const block = `${start}\n${snapshot}\n${end}`;
+              const pattern = new RegExp(`${escapeRegExp(start)}[\\s\\S]*?${escapeRegExp(end)}`);
+
+              if (pattern.test(body)) {
+                return body.replace(pattern, block);
+              }
+
+              const trimmed = body.trimEnd();
+              return trimmed ? `${trimmed}\n\n${block}` : block;
+            }
+
+            function removeNotionSnapshot(body) {
+              const start = '<!-- codex-notion-task:start -->';
+              const end = '<!-- codex-notion-task:end -->';
+              const pattern = new RegExp(`${escapeRegExp(start)}[\\s\\S]*?${escapeRegExp(end)}`, 'g');
+              return body.replace(pattern, '');
+            }
+
+            function escapeRegExp(value) {
+              return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
