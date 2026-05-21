@@ -50,13 +50,26 @@ jobs:
             });
 
             const texts = [codexReview.body || '', ...comments.map((comment) => comment.body || '')];
-            const blockingPriorityPattern = /(^|\n)\s*(?:[-*]\s*)?(?:\*\*)?\[?P[0-2]\]?\s*[:\]-]/i;
-            const bracketPriorityPattern = /\[(?:P0|P1|P2)\]/i;
-            const hasBlockingPriority = texts.some((text) =>
-              blockingPriorityPattern.test(text) || bracketPriorityPattern.test(text)
-            );
+            const combinedText = texts.join('\n\n');
+            const priorityPatterns = [
+              /(^|\n)\s*(?:[-*]\s*)?(?:\*\*)?\[?P[0-2]\]?\s*[:\]-]/i,
+              /\[(?:P0|P1|P2)(?:\s+Badge)?\]/i,
+              /!\[(?:P0|P1|P2)\s+Badge\]/i,
+              /img\.shields\.io\/badge\/(?:P0|P1|P2)[-/]/i,
+              /\bP[0-2]\s+Badge\b/i
+            ];
+            const inaccessibleTaskPatterns = [
+              /external\s+(?:notion\s+)?(?:task|spec|document|doc).*not accessible/i,
+              /notion.*not accessible/i,
+              /cannot be validated against the stated requirements/i,
+              /inaccessible external spec/i,
+              /cannot access (?:its|the) contents/i,
+              /missing requirements/i
+            ];
+            const hasBlockingPriority = priorityPatterns.some((pattern) => pattern.test(combinedText));
+            const hasInaccessibleTask = inaccessibleTaskPatterns.some((pattern) => pattern.test(combinedText));
             const codexRequestedChanges = String(codexReview.state || '').toUpperCase() === 'CHANGES_REQUESTED';
-            const shouldRequestChanges = codexRequestedChanges || hasBlockingPriority;
+            const shouldRequestChanges = codexRequestedChanges || hasBlockingPriority || hasInaccessibleTask;
 
             const reviews = await github.paginate(github.rest.pulls.listReviews, {
               owner,
@@ -79,8 +92,11 @@ jobs:
 
             const event = shouldRequestChanges ? 'REQUEST_CHANGES' : 'APPROVE';
             const verdict = shouldRequestChanges ? 'REQUEST_CHANGES' : 'APPROVE';
+            const reason = hasInaccessibleTask
+              ? 'Codex could not access the external task/spec, so correctness cannot be validated.'
+              : 'Codex review found P0/P1/P2 findings.';
             const body = shouldRequestChanges
-              ? 'Verdict: REQUEST_CHANGES\n\nCodex review found P0/P1/P2 findings, so changes are requested.'
+              ? `Verdict: REQUEST_CHANGES\n\n${reason} Changes are requested.`
               : 'Verdict: APPROVE\n\nCodex review completed without P0/P1/P2 findings, so this pull request is approved.';
 
             if (tokenUserLower === prAuthorLower) {
