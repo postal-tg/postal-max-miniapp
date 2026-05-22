@@ -132,6 +132,7 @@ jobs:
               /missing requirements/i,
               /snapshot.*(?:missing|unavailable)/i,
               /comments are unavailable/i,
+              /To use Codex here.*connect to github/i,
               /РЅРµ\s+СЃРјРѕРі.*(?:РїСЂРѕС‡РёС‚Р°С‚СЊ|РїРѕР»СѓС‡РёС‚СЊ|РґРѕСЃС‚СѓРї)/i,
               /РЅРµР»СЊР·СЏ\s+РїРѕРґС‚РІРµСЂРґРёС‚СЊ/i,
               /РЅРµРґРѕСЃС‚СѓРї/i,
@@ -198,7 +199,11 @@ jobs:
             function isCodexReviewComment(body) {
               const visible = stripDetails(body || '').trim();
               return /^Codex Review:/i.test(visible) || /^###\s*(?:[^\w\r\n]+\s*)?Codex Review/i.test(visible);
+            }            function isCodexConnectorFailure(body) {
+              return /To use Codex here.*connect to github/i.test(body || '');
             }
+
+
 
             function stripDetails(body) {
               return body.replace(/<details>[\s\S]*?<\/details>/gi, '').trim();
