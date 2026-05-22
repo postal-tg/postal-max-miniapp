@@ -4,10 +4,19 @@ on:
   pull_request_review:
     types:
       - submitted
+  issue_comment:
+    types:
+      - created
+      - edited
 
 jobs:
   codex-review-decision:
-    if: ${{ github.event.review.user.login == 'chatgpt-codex-connector[bot]' || github.event.review.user.login == 'chatgpt-codex-connector' }}
+    if: >-
+      (github.event_name == 'pull_request_review' &&
+       (github.event.review.user.login == 'chatgpt-codex-connector[bot]' || github.event.review.user.login == 'chatgpt-codex-connector')) ||
+      (github.event_name == 'issue_comment' &&
+       github.event.issue.pull_request &&
+       (github.event.comment.user.login == 'chatgpt-codex-connector[bot]' || github.event.comment.user.login == 'chatgpt-codex-connector'))
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -28,11 +37,57 @@ jobs:
           script: |
             const owner = context.repo.owner;
             const repo = context.repo.repo;
-            const pr = context.payload.pull_request;
-            const codexReview = context.payload.review;
+            const eventName = context.eventName;
 
-            if (!pr || !codexReview) {
-              core.info('This event does not include a pull request review payload.');
+            let pr = context.payload.pull_request || null;
+            let codexReview = context.payload.review || null;
+            let texts = [];
+            let sourceSubmittedAt = 0;
+            let sourceKind = eventName;
+
+            if (eventName === 'pull_request_review') {
+              if (!pr || !codexReview) {
+                core.info('This event does not include a pull request review payload.');
+                return;
+              }
+
+              const comments = await github.paginate(github.rest.pulls.listCommentsForReview, {
+                owner,
+                repo,
+                pull_number: pr.number,
+                review_id: codexReview.id,
+                per_page: 100
+              });
+
+              texts = [codexReview.body || '', ...comments.map((comment) => comment.body || '')];
+              sourceSubmittedAt = Date.parse(codexReview.submitted_at || codexReview.updated_at || codexReview.created_at || 0);
+              sourceKind = 'Codex pull request review';
+            } else if (eventName === 'issue_comment') {
+              const issue = context.payload.issue;
+              const comment = context.payload.comment;
+
+              if (!issue || !issue.pull_request || !comment) {
+                core.info('This comment is not on a pull request.');
+                return;
+              }
+
+              if (!isCodexReviewComment(comment.body || '')) {
+                core.info('Codex comment is not a review result, skipping.');
+                return;
+              }
+
+              const response = await github.rest.pulls.get({
+                owner,
+                repo,
+                pull_number: issue.number
+              });
+
+              pr = response.data;
+              texts = [comment.body || ''];
+              sourceSubmittedAt = Date.parse(comment.updated_at || comment.created_at || 0);
+              sourceKind = 'Codex issue comment';
+            } else {
+              core.info(`Unsupported event ${eventName}.`);
               return;
             }
 
@@ -40,17 +95,8 @@ jobs:
             const tokenUser = viewer.login;
             const tokenUserLower = tokenUser.toLowerCase();
             const prAuthorLower = pr.user.login.toLowerCase();
-
-            const comments = await github.paginate(github.rest.pulls.listCommentsForReview, {
-              owner,
-              repo,
-              pull_number: pr.number,
-              review_id: codexReview.id,
-              per_page: 100
-            });
-
-            const texts = [codexReview.body || '', ...comments.map((comment) => comment.body || '')];
             const combinedText = texts.join('\n\n');
+
             const priorityPatterns = [
               /(^|\n)\s*(?:[-*]\s*)?(?:\*\*)?\[?P[0-2]\]?\s*[:\]-]/i,
               /\[(?:P0|P1|P2)(?:\s+Badge)?\]/i,
@@ -64,12 +110,19 @@ jobs:
               /cannot be validated against the stated requirements/i,
               /inaccessible external spec/i,
               /cannot access (?:its|the) contents/i,
-              /missing requirements/i
+              /missing requirements/i,
+              /snapshot.*(?:missing|unavailable)/i,
+              /comments are unavailable/i,
+              /РЅРµ\s+СЃРјРѕРі.*(?:РїСЂРѕС‡РёС‚Р°С‚СЊ|РїРѕР»СѓС‡РёС‚СЊ|РґРѕСЃС‚СѓРї)/i,
+              /РЅРµР»СЊР·СЏ\s+РїРѕРґС‚РІРµСЂРґРёС‚СЊ/i,
+              /РЅРµРґРѕСЃС‚СѓРї/i,
+              /РѕС‚СЃСѓС‚СЃС‚РІ(?:СѓРµС‚|СѓСЋС‚).*С‚СЂРµР±РѕРІР°РЅ/i
             ];
+            const explicitRequestChanges = /Verdict:\s*REQUEST_CHANGES/i.test(combinedText);
             const hasBlockingPriority = priorityPatterns.some((pattern) => pattern.test(combinedText));
             const hasInaccessibleTask = inaccessibleTaskPatterns.some((pattern) => pattern.test(combinedText));
-            const codexRequestedChanges = String(codexReview.state || '').toUpperCase() === 'CHANGES_REQUESTED';
-            const shouldRequestChanges = codexRequestedChanges || hasBlockingPriority || hasInaccessibleTask;
+            const codexRequestedChanges = codexReview && String(codexReview.state || '').toUpperCase() === 'CHANGES_REQUESTED';
+            const shouldRequestChanges = explicitRequestChanges || codexRequestedChanges || hasBlockingPriority || hasInaccessibleTask;
 
             const reviews = await github.paginate(github.rest.pulls.listReviews, {
               owner,
@@ -77,16 +130,15 @@ jobs:
               pull_number: pr.number,
               per_page: 100
             });
-            const codexSubmittedAt = Date.parse(codexReview.submitted_at || codexReview.updated_at || codexReview.created_at || 0);
             const alreadyDecided = reviews.some((review) => {
               const sameUser = review.user && review.user.login && review.user.login.toLowerCase() === tokenUserLower;
               const state = String(review.state || '').toUpperCase();
               const submittedAt = Date.parse(review.submitted_at || review.updated_at || review.created_at || 0);
-              return sameUser && submittedAt >= codexSubmittedAt && ['APPROVED', 'CHANGES_REQUESTED'].includes(state);
+              return sameUser && submittedAt >= sourceSubmittedAt && ['APPROVED', 'CHANGES_REQUESTED'].includes(state);
             });
 
             if (alreadyDecided) {
-              core.info(`${tokenUser} already submitted a decision after this Codex review.`);
+              core.info(`${tokenUser} already submitted a decision after this ${sourceKind}.`);
               return;
             }
 
@@ -118,3 +170,12 @@ jobs:
               event,
               body
             });
+
+            function isCodexReviewComment(body) {
+              const visible = stripDetails(body || '').trim();
+              return /^Codex Review:/i.test(visible) || /^###\s*(?:рџ’Ў\s*)?Codex Review/i.test(visible);
+            }
+
+            function stripDetails(body) {
+              return body.replace(/<details>[\s\S]*?<\/details>/gi, '').trim();
+            }
