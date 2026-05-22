@@ -173,7 +173,7 @@ jobs:
 
             function isCodexReviewComment(body) {
               const visible = stripDetails(body || '').trim();
-              return /^Codex Review:/i.test(visible) || /^###\s*(?:рџ’Ў\s*)?Codex Review/i.test(visible);
+              return /^Codex Review:/i.test(visible) || /^###\s*(?:[^\w\r\n]+\s*)?Codex Review/i.test(visible);
             }
 
             function stripDetails(body) {
