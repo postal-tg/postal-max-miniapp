@@ -11,6 +11,7 @@
 - Treat missing or incorrectly implemented task requirements as P1 review findings.
 - Treat important but non-blocking correctness, regression, or maintainability risks as P2 review findings when applicable.
 - Prefix every review finding with its priority label, such as [P1] or [P2], so automation can decide whether to approve or request changes.
+- Write the review summary and all GitHub review comments in Russian. Keep only automation markers unchanged: [P0], [P1], [P2], `Verdict: APPROVE`, and `Verdict: REQUEST_CHANGES`.
 - Prefer inline comments on exact changed lines. If a finding cannot be attached inline, include it in the review summary.
 - Always finish the review with a clear verdict line: `Verdict: APPROVE` when there are no P0/P1/P2 findings, or `Verdict: REQUEST_CHANGES` when there are P0/P1/P2 findings.
 - Check for regressions, edge cases, security issues, data loss risks, and unrelated changes.
