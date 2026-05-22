@@ -102,11 +102,39 @@ jobs:
             }
 
             function extractNotionId(url) {
-              const compactUrl = url.replace(/-/g, '');
-              const match = compactUrl.match(/[0-9a-f]{32}/i);
-              return match ? match[0].toLowerCase() : null;
-            }
+              try {
+                const parsed = new URL(url);
+                const pathParts = parsed.pathname.split('/').filter(Boolean);
 
+                for (let index = pathParts.length - 1; index >= 0; index -= 1) {
+                  const part = decodeURIComponent(pathParts[index] || '');
+                  const hyphenated = part.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i);
+                  if (hyphenated) {
+                    return hyphenated[1].replace(/-/g, '').toLowerCase();
+                  }
+
+                  const compact = part.replace(/-/g, '');
+                  const compactMatch = compact.match(/([0-9a-f]{32})$/i);
+                  if (compactMatch) {
+                    return compactMatch[1].toLowerCase();
+                  }
+                }
+
+                const queryId = parsed.searchParams.get('p') || parsed.searchParams.get('page_id');
+                if (queryId) {
+                  const compactQueryId = queryId.replace(/-/g, '');
+                  const queryMatch = compactQueryId.match(/^[0-9a-f]{32}$/i);
+                  if (queryMatch) {
+                    return compactQueryId.toLowerCase();
+                  }
+                }
+              } catch {
+                // Fall through to the conservative fallback below.
+              }
+
+              const fallback = url.match(/[0-9a-f]{32}/gi);
+              return fallback && fallback.length > 0 ? fallback[0].toLowerCase() : null;
+            }
             function formatUuid(compactId) {
               return [
                 compactId.slice(0, 8),
