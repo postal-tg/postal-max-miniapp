@@ -145,37 +145,67 @@ jobs:
                 }
 
                 const pageId = formatUuid(id);
+                let title = '';
+                let pageError = null;
 
                 try {
                   const page = await notionGet(`pages/${pageId}`, notionToken);
-                  const title = getPageTitle(page);
-                  const markdown = await getNotionMarkdown(pageId, notionToken);
+                  title = getPageTitle(page);
+                } catch (error) {
+                  pageError = error;
+                }
 
-                  lines.push('Status: fetched from Notion API.');
-                  if (title) {
-                    lines.push(`Title: ${title}`);
-                  }
+                if (title) {
+                  lines.push('Status: fetched task title from Notion API.');
+                  lines.push(`Title: ${title}`);
+                }
+
+                let bodyAdded = false;
+                let bodyError = null;
+
+                try {
+                  const markdown = await getNotionMarkdown(pageId, notionToken);
                   lines.push('');
-                  lines.push(markdown || '(The Notion task body is empty. If a Title line is present above, use it as the task requirement; do not treat the empty body as a review finding by itself.)');
-                  await appendNotionComments(lines, pageId, notionToken);
-                } catch (markdownError) {
+                  lines.push(markdown || titleOnlyRequirementText());
+                  bodyAdded = true;
+                } catch (error) {
+                  bodyError = error;
+                }
+
+                if (!bodyAdded) {
                   try {
                     const fallbackLines = await getBlockText(pageId, notionToken, 0);
-                    lines.push('Status: fetched from Notion block API fallback.');
+                    if (!title) {
+                      lines.push('Status: fetched from Notion block API fallback.');
+                    }
                     lines.push('');
-                    lines.push(fallbackLines.join('\n') || '(The Notion task body is empty. If a Title line is present above, use it as the task requirement; do not treat the empty body as a review finding by itself.)');
-                    await appendNotionComments(lines, pageId, notionToken);
+                    lines.push(fallbackLines.join('\n') || titleOnlyRequirementText());
+                    bodyAdded = true;
                   } catch (fallbackError) {
-                    const safeMessage = summarizeNotionError(markdownError, fallbackError);
-                    lines.push(`Status: unavailable - ${safeMessage}`);
-                    lines.push('Make sure the Notion integration has access to this exact task page and that the PR contains a direct task page link, not only a database view.');
+                    if (title) {
+                      lines.push('');
+                      lines.push(titleOnlyRequirementText());
+                      lines.push('Body note: Notion body content was not available to the workflow, but the task title was fetched and must be used as the requirement.');
+                      bodyAdded = true;
+                    } else {
+                      const safeMessage = summarizeNotionError(pageError || bodyError, fallbackError);
+                      lines.push(`Status: unavailable - ${safeMessage}`);
+                      lines.push('Make sure the Notion integration has access to this exact task page and that the PR contains a direct task page link, not only a database view.');
+                    }
                   }
+                }
+
+                if (bodyAdded) {
+                  await appendNotionComments(lines, pageId, notionToken);
                 }
               }
 
               return limitSnapshot(lines.join('\n'));
             }
 
+            function titleOnlyRequirementText() {
+              return '(The Notion task body is empty. Use the Title line above as the task requirement; do not treat the empty body as a review finding by itself.)';
+            }
             async function notionGet(path, notionToken) {
               const response = await fetch(`https://api.notion.com/v1/${path}`, {
                 headers: {
