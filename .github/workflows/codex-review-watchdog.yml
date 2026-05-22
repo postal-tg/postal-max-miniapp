@@ -1,0 +1,311 @@
+name: Codex review watchdog
+
+on:
+  issue_comment:
+    types:
+      - created
+
+concurrency:
+  group: codex-review-watchdog-${{ github.repository }}-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  codex-review-watchdog:
+    if: >-
+      github.event.issue.pull_request &&
+      contains(github.event.comment.body, '@codex review') &&
+      github.event.comment.user.login != 'chatgpt-codex-connector[bot]' &&
+      github.event.comment.user.login != 'chatgpt-codex-connector'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      CODEX_REVIEW_TOKEN: ${{ secrets.CODEX_REVIEW_TOKEN }}
+      CODEX_WATCHDOG_WAIT_SECONDS: 300
+      CODEX_WATCHDOG_MAX_RETRIES: 2
+
+    steps:
+      - name: Verify Codex review token
+        if: ${{ env.CODEX_REVIEW_TOKEN == '' }}
+        run: |
+          echo "::error::Set the CODEX_REVIEW_TOKEN repository secret to a GitHub token from Zonix01."
+          exit 1
+
+      - name: Retry Codex or close the review loop
+        uses: actions/github-script@v9
+        timeout-minutes: 20
+        with:
+          github-token: ${{ env.CODEX_REVIEW_TOKEN }}
+          script: |
+            const waitSeconds = Math.max(0, Number(process.env.CODEX_WATCHDOG_WAIT_SECONDS || '300'));
+            const maxRetries = Math.max(0, Number(process.env.CODEX_WATCHDOG_MAX_RETRIES || '2'));
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issue = context.payload.issue;
+            const triggerComment = context.payload.comment;
+            const prNumber = issue.number;
+
+            if (!/@codex\s+review/i.test(triggerComment.body || '')) {
+              core.info('Comment is not a Codex review request.');
+              return;
+            }
+
+            if (waitSeconds > 0) {
+              core.info(`Waiting ${waitSeconds}s for Codex to respond.`);
+              await sleep(waitSeconds * 1000);
+            }
+
+            const { data: viewer } = await github.rest.users.getAuthenticated();
+            const tokenUser = viewer.login;
+            const tokenUserLower = tokenUser.toLowerCase();
+
+            const { data: pr } = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: prNumber
+            });
+
+            const issueComments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number: prNumber,
+              per_page: 100
+            });
+            const chainStart = findChainStart(issueComments, triggerComment);
+            const chainStartTime = Date.parse(chainStart.created_at || triggerComment.created_at || 0);
+
+            if (await hasTokenDecisionAfter(prNumber, tokenUserLower, chainStartTime)) {
+              core.info(`${tokenUser} already submitted a verdict for this Codex review chain.`);
+              return;
+            }
+
+            const codex = await collectCodexSignals(prNumber, chainStartTime, issueComments);
+
+            if (codex.hasBlocking || codex.hasConnectorFailure) {
+              const body = codex.hasConnectorFailure
+                ? `Verdict: REQUEST_CHANGES\n\n${ru('Q29kZXgg0LLQtdGA0L3Rg9C7INC+0YjQuNCx0LrRgyDQv9C+0LTQutC70Y7Rh9C10L3QuNGPINCy0LzQtdGB0YLQviByZXZpZXcuINCn0YLQvtCx0YsgUFIg0L3QtSDQt9Cw0LLQuNGB0LDQuyDQuCDQvdC1INGB0YLQsNC90L7QstC40LvRgdGPINC30LXQu9C10L3Ri9C8INCx0LXQtyDQv9GA0L7QstC10YDQutC4LCDRgtGA0LXQsdGD0LXRgtGB0Y8g0L/QvtCy0YLQvtGA0L3QsNGPINC90LDRgdGC0YDQvtC50LrQsCBDb2RleCBjb25uZWN0b3Ig0LjQu9C4INGA0YPRh9C90LDRjyDQv9GA0L7QstC10YDQutCwLg==')}`
+                : `Verdict: REQUEST_CHANGES\n\n${ru('Q29kZXgg0L3QsNGI0LXQuyBQMC9QMS9QMiDQt9Cw0LzQtdGH0LDQvdC40Y8uINCi0YDQtdCx0YPRjtGC0YHRjyDQuNC30LzQtdC90LXQvdC40Y8u')}`;
+              await submitDecision(pr, tokenUserLower, 'REQUEST_CHANGES', body);
+              return;
+            }
+
+            if (codex.hasReviewResult || codex.hasPositiveReaction) {
+              await submitDecision(
+                pr,
+                tokenUserLower,
+                'APPROVE',
+                `Verdict: APPROVE\n\n${ru('Q29kZXgg0L3QtSDQvdCw0YjQtdC7IFAwL1AxL1AyINC30LDQvNC10YfQsNC90LjQuSDQv9C+0YHQu9C1INC/0YDQvtCy0LXRgNC60LgsINC/0L7RjdGC0L7QvNGDIHB1bGwgcmVxdWVzdCDQvtC00L7QsdGA0LXQvS4=')}`
+              );
+              return;
+            }
+
+            const retryCount = issueComments.filter((comment) => {
+              const createdAt = Date.parse(comment.created_at || 0);
+              return createdAt >= chainStartTime &&
+                comment.user &&
+                comment.user.login &&
+                comment.user.login.toLowerCase() === tokenUserLower &&
+                /<!--\s*codex-watchdog-retry:\d+\s*-->/.test(comment.body || '');
+            }).length;
+
+            if (retryCount < maxRetries) {
+              const nextRetry = retryCount + 1;
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: prNumber,
+                body: [
+                  '@codex review',
+                  `<!-- codex-watchdog-retry:${nextRetry} -->`,
+                  '',
+                  'Check the whole PR using the Notion task snapshot in the PR description and AGENTS.md.',
+                  '',
+                  'Write human review text in Russian. Keep [P0], [P1], [P2], Verdict: APPROVE, and Verdict: REQUEST_CHANGES unchanged.',
+                  '',
+                  'Finish with exactly one verdict line: Verdict: APPROVE or Verdict: REQUEST_CHANGES.'
+                ].join('\n')
+              });
+              core.info(`Codex did not finish; posted retry ${nextRetry}/${maxRetries}.`);
+              return;
+            }
+
+            await submitDecision(
+              pr,
+              tokenUserLower,
+              'REQUEST_CHANGES',
+              `Verdict: REQUEST_CHANGES\n\n${ru('Q29kZXgg0L3QtSDQt9Cw0LLQtdGA0YjQuNC7INGA0LXQstGM0Y4g0L/QvtGB0LvQtSDQvdC10YHQutC+0LvRjNC60LjRhSDQv9C+0L/Ri9GC0L7Qui4g0KfRgtC+0LHRiyBQUiDQvdC1INC30LDQstC40YHQsNC7INC4INC90LUg0YHRgtCw0L3QvtCy0LjQu9GB0Y8g0LfQtdC70LXQvdGL0Lwg0LHQtdC3INC/0YDQvtCy0LXRgNC60LgsINGC0YDQtdCx0YPQtdGC0YHRjyDRgNGD0YfQvdCw0Y8g0L/RgNC+0LLQtdGA0LrQsCDQuNC70Lgg0L/QvtCy0YLQvtGA0L3Ri9C5INC30LDQv9GD0YHQuiByZXZpZXcu')}`
+            );
+
+            async function collectCodexSignals(pullNumber, sinceTime, knownIssueComments) {
+              const texts = [];
+              let hasReviewResult = false;
+              let hasPositiveReaction = false;
+
+              const reviews = await github.paginate(github.rest.pulls.listReviews, {
+                owner,
+                repo,
+                pull_number: pullNumber,
+                per_page: 100
+              });
+
+              for (const review of reviews) {
+                if (!isCodexUser(review.user && review.user.login)) continue;
+                if (Date.parse(review.submitted_at || review.updated_at || review.created_at || 0) < sinceTime) continue;
+                hasReviewResult = true;
+                texts.push(review.body || '');
+              }
+
+              const reviewComments = await github.paginate(github.rest.pulls.listReviewComments, {
+                owner,
+                repo,
+                pull_number: pullNumber,
+                per_page: 100
+              });
+
+              for (const comment of reviewComments) {
+                if (!isCodexUser(comment.user && comment.user.login)) continue;
+                if (Date.parse(comment.updated_at || comment.created_at || 0) < sinceTime) continue;
+                hasReviewResult = true;
+                texts.push(comment.body || '');
+              }
+
+              for (const comment of knownIssueComments) {
+                if (!isCodexUser(comment.user && comment.user.login)) continue;
+                if (Date.parse(comment.updated_at || comment.created_at || 0) < sinceTime) continue;
+                const body = comment.body || '';
+                texts.push(body);
+                if (isCodexReviewComment(body) || isCodexConnectorFailure(body)) {
+                  hasReviewResult = true;
+                }
+              }
+
+              const reviewRequests = knownIssueComments.filter((comment) => {
+                const createdAt = Date.parse(comment.created_at || 0);
+                return createdAt >= sinceTime &&
+                  /@codex\s+review/i.test(comment.body || '') &&
+                  !isCodexUser(comment.user && comment.user.login);
+              });
+
+              for (const comment of reviewRequests.slice(-5)) {
+                const reactions = await github.paginate(github.rest.reactions.listForIssueComment, {
+                  owner,
+                  repo,
+                  comment_id: comment.id,
+                  per_page: 100
+                });
+
+                if (reactions.some((reaction) => reaction.content === '+1' && isCodexUser(reaction.user && reaction.user.login))) {
+                  hasPositiveReaction = true;
+                }
+              }
+
+              const combinedText = texts.join('\n\n');
+              const priorityPatterns = [
+                /(^|\n)\s*(?:[-*]\s*)?(?:\*\*)?\[?P[0-2]\]?\s*[:\]-]/i,
+                /\[(?:P0|P1|P2)(?:\s+Badge)?\]/i,
+                /!\[(?:P0|P1|P2)\s+Badge\]/i,
+                /img\.shields\.io\/badge\/(?:P0|P1|P2)[-/]/i,
+                /\bP[0-2]\s+Badge\b/i
+              ];
+              const inaccessibleTaskPatterns = [
+                /external\s+(?:notion\s+)?(?:task|spec|document|doc).*not accessible/i,
+                /notion.*not accessible/i,
+                /cannot be validated against the stated requirements/i,
+                /inaccessible external spec/i,
+                /cannot access (?:its|the) contents/i,
+                /missing requirements/i,
+                /snapshot.*(?:missing|unavailable)/i,
+                /comments are unavailable/i
+              ];
+              const hasConnectorFailure = isCodexConnectorFailure(combinedText);
+              const hasBlocking = /Verdict:\s*REQUEST_CHANGES/i.test(combinedText) ||
+                priorityPatterns.some((pattern) => pattern.test(combinedText)) ||
+                inaccessibleTaskPatterns.some((pattern) => pattern.test(combinedText));
+
+              return { hasReviewResult, hasPositiveReaction, hasBlocking, hasConnectorFailure };
+            }
+
+            async function hasTokenDecisionAfter(pullNumber, tokenUserLower, sinceTime) {
+              const reviews = await github.paginate(github.rest.pulls.listReviews, {
+                owner,
+                repo,
+                pull_number: pullNumber,
+                per_page: 100
+              });
+
+              return reviews.some((review) => {
+                const sameUser = review.user && review.user.login && review.user.login.toLowerCase() === tokenUserLower;
+                const state = String(review.state || '').toUpperCase();
+                const submittedAt = Date.parse(review.submitted_at || review.updated_at || review.created_at || 0);
+                return sameUser && submittedAt >= sinceTime && ['APPROVED', 'CHANGES_REQUESTED'].includes(state);
+              });
+            }
+
+            async function submitDecision(pr, tokenUserLower, event, body) {
+              const prAuthorLower = pr.user.login.toLowerCase();
+
+              if (await hasTokenDecisionAfter(pr.number, tokenUserLower, Date.now() - 60 * 1000)) {
+                core.info('A fresh verdict already exists.');
+                return;
+              }
+
+              if (tokenUserLower === prAuthorLower) {
+                await github.rest.pulls.createReview({
+                  owner,
+                  repo,
+                  pull_number: pr.number,
+                  event: 'COMMENT',
+                  body: `${body}\n\n${ru('R2l0SHViINC90LUg0L/QvtC30LLQvtC70Y/QtdGCIHswfSDQv9C+0YHRgtCw0LLQuNGC0YwgYXBwcm92ZSDQuNC70LggcmVxdWVzdCBjaGFuZ2VzINCyINGB0LLQvtC10LwgcHVsbCByZXF1ZXN0LCDQv9C+0Y3RgtC+0LzRgyB2ZXJkaWN0INC30LDQv9C40YHQsNC9INC60LDQuiDQutC+0LzQvNC10L3RgtCw0YDQuNC5Lg==').replace('{0}', pr.user.login)}`
+                });
+                return;
+              }
+
+              await github.rest.pulls.createReview({
+                owner,
+                repo,
+                pull_number: pr.number,
+                event,
+                body
+              });
+            }
+
+            function findChainStart(comments, triggerComment) {
+              const triggerTime = Date.parse(triggerComment.created_at || 0);
+              const candidates = comments
+                .filter((comment) => {
+                  const createdAt = Date.parse(comment.created_at || 0);
+                  return createdAt <= triggerTime &&
+                    /@codex\s+review/i.test(comment.body || '') &&
+                    !/<!--\s*codex-watchdog-retry:\d+\s*-->/.test(comment.body || '') &&
+                    !isCodexUser(comment.user && comment.user.login);
+                })
+                .sort((a, b) => Date.parse(b.created_at || 0) - Date.parse(a.created_at || 0));
+
+              return candidates[0] || triggerComment;
+            }
+
+            function isCodexUser(login) {
+              return String(login || '').toLowerCase() === 'chatgpt-codex-connector[bot]' ||
+                String(login || '').toLowerCase() === 'chatgpt-codex-connector';
+            }
+
+            function isCodexReviewComment(body) {
+              const visible = stripDetails(body || '').trim();
+              return /^Codex Review:/i.test(visible) || /^###\s*(?:[^\w\r\n]+\s*)?Codex Review/i.test(visible);
+            }
+
+            function isCodexConnectorFailure(body) {
+              return /To use Codex here.*connect to github/i.test(body || '');
+            }
+
+            function stripDetails(body) {
+              return body.replace(/<details>[\s\S]*?<\/details>/gi, '').trim();
+            }
+
+            function sleep(ms) {
+              return new Promise((resolve) => setTimeout(resolve, ms));
+            }
+
+            function ru(value) {
+              return Buffer.from(value, 'base64').toString('utf8');
+            }
