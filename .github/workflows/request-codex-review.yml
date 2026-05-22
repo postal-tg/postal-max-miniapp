@@ -75,6 +75,8 @@ jobs:
                 '',
                 'Review the entire PR and every changed file. Do not stop after the first finding or after two comments. Report every P0/P1/P2 issue you can identify, with priority labels such as [P1] or [P2]. Use inline comments where possible.',
                 '',
+                'Write the review summary and all GitHub review comments in Russian. Keep only automation markers unchanged: [P0], [P1], [P2], Verdict: APPROVE, Verdict: REQUEST_CHANGES.',
+                '',
                 'If a Notion/external task link is present but the task snapshot is missing, says unavailable, or says comments are unavailable, treat that as [P1] and request changes because correctness cannot be validated.',
                 '',
                 'Finish with exactly one verdict line: Verdict: APPROVE or Verdict: REQUEST_CHANGES.'
