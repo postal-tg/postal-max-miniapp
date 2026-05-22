@@ -68,6 +68,7 @@ jobs:
               issue_number: pr.number,
               body: [
                 '@codex review',
+                '<!-- codex-review-request:initial -->',
                 '',
                 'Check the whole PR using the "Notion task snapshot for Codex" in the PR description and the repository AGENTS.md review guidelines.',
                 '',
