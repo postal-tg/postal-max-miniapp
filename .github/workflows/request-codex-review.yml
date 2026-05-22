@@ -69,11 +69,13 @@ jobs:
               body: [
                 '@codex review',
                 '',
-                'Check this pull request against the task in the PR description. If the PR description contains a "Notion task snapshot for Codex" section, use that section as the task source of truth, including its Notion comments section.',
+                'Check this pull request against the task snapshot published in the PR description by GitHub Actions. Use the "Notion task snapshot for Codex" section as the source of truth, including the copied task content and "Notion comments" section.',
+                '',
+                'Do not try to open or read Notion/external links yourself. Treat those links as references only; base the review on the task content and comments already copied into the PR description.',
                 '',
                 'Review the entire PR and every changed file. Do not stop after the first finding or after two comments. Report every P0/P1/P2 issue you can identify, with priority labels such as [P1] or [P2]. Use inline comments where possible.',
                 '',
-                'If a Notion/external task link is present but the task snapshot is missing or says unavailable, treat that as [P1] and request changes because correctness cannot be validated.',
+                'If a Notion/external task link is present but the task snapshot is missing, says unavailable, or says comments are unavailable, treat that as [P1] and request changes because correctness cannot be validated.',
                 '',
                 'Finish with exactly one verdict line: Verdict: APPROVE or Verdict: REQUEST_CHANGES.'
               ].join('\n')
