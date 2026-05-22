@@ -71,6 +71,8 @@ jobs:
                 '',
                 'Check this pull request against the task snapshot published in the PR description by GitHub Actions. Use the "Notion task snapshot for Codex" section as the source of truth, including the copied task content and "Notion comments" section.',
                 '',
+                'If the copied Notion task body is empty but the snapshot contains a Title line, use that title as the task requirement. Do not report an empty Notion body as a review finding by itself.',
+                '',
                 'Do not try to open or read Notion/external links yourself. Treat those links as references only; base the review on the task content and comments already copied into the PR description.',
                 '',
                 'Review the entire PR and every changed file. Do not stop after the first finding or after two comments. Report every P0/P1/P2 issue you can identify, with priority labels such as [P1] or [P2]. Use inline comments where possible.',
@@ -154,14 +156,14 @@ jobs:
                     lines.push(`Title: ${title}`);
                   }
                   lines.push('');
-                  lines.push(markdown || '(The Notion page has no readable body content.)');
+                  lines.push(markdown || '(The Notion task body is empty. If a Title line is present above, use it as the task requirement; do not treat the empty body as a review finding by itself.)');
                   await appendNotionComments(lines, pageId, notionToken);
                 } catch (markdownError) {
                   try {
                     const fallbackLines = await getBlockText(pageId, notionToken, 0);
                     lines.push('Status: fetched from Notion block API fallback.');
                     lines.push('');
-                    lines.push(fallbackLines.join('\n') || '(The Notion page has no readable body content.)');
+                    lines.push(fallbackLines.join('\n') || '(The Notion task body is empty. If a Title line is present above, use it as the task requirement; do not treat the empty body as a review finding by itself.)');
                     await appendNotionComments(lines, pageId, notionToken);
                   } catch (fallbackError) {
                     const safeMessage = summarizeNotionError(markdownError, fallbackError);
