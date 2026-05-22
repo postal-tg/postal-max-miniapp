@@ -6,6 +6,7 @@
 - Report all P0/P1/P2 findings that are relevant and actionable.
 - Compare each pull request implementation against the task snapshot published in the PR description.
 - Treat the `Notion task snapshot for Codex` section, including the copied task content and `Notion comments` section, as the source of truth for the linked task.
+- If the copied Notion task body is empty but the snapshot contains a title, use that title as the task requirement. Do not report an empty Notion body as a review finding by itself.
 - Do not try to read requirements from external Notion links during review. Those links are references only; use the task content and comments already copied into the PR description by GitHub Actions.
 - If a Notion or external task link is present but the task snapshot is missing, unavailable, or says comments are unavailable, treat that as a P1 review finding and use `Verdict: REQUEST_CHANGES`.
 - Treat missing or incorrectly implemented task requirements as P1 review findings.
