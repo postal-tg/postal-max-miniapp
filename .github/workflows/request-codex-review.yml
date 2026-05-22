@@ -69,17 +69,11 @@ jobs:
               body: [
                 '@codex review',
                 '',
-                'Check this pull request against the task snapshot published in the PR description by GitHub Actions. Use the "Notion task snapshot for Codex" section as the source of truth, including the copied task content and "Notion comments" section.',
+                'Check the whole PR using the "Notion task snapshot for Codex" in the PR description and the repository AGENTS.md review guidelines.',
                 '',
-                'If the copied Notion task body is empty but the snapshot contains a Title line, use that title as the task requirement. Do not report an empty Notion body as a review finding by itself.',
+                'Do not open Notion/external links yourself; use the copied task title/body/comments from the PR description.',
                 '',
-                'Do not try to open or read Notion/external links yourself. Treat those links as references only; base the review on the task content and comments already copied into the PR description.',
-                '',
-                'Review the entire PR and every changed file. Do not stop after the first finding or after two comments. Report every P0/P1/P2 issue you can identify, with priority labels such as [P1] or [P2]. Use inline comments where possible.',
-                '',
-                'Write the review summary and all GitHub review comments in Russian. Keep only automation markers unchanged: [P0], [P1], [P2], Verdict: APPROVE, Verdict: REQUEST_CHANGES.',
-                '',
-                'If a Notion/external task link is present but the task snapshot is missing, says unavailable, or says comments are unavailable, treat that as [P1] and request changes because correctness cannot be validated.',
+                'Write human review text in Russian. Keep [P0], [P1], [P2], Verdict: APPROVE, and Verdict: REQUEST_CHANGES unchanged.',
                 '',
                 'Finish with exactly one verdict line: Verdict: APPROVE or Verdict: REQUEST_CHANGES.'
               ].join('\n')
