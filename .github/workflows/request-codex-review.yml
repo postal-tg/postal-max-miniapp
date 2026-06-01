@@ -81,7 +81,7 @@ jobs:
             });
 
             function extractNotionUrls(text) {
-              const matches = text.match(/https?:\/\/(?:www\.)?notion\.so\/[^\s<>)"']+/gi) || [];
+              const matches = text.match(/https?:\/\/(?:(?:www|app)\.)?notion\.(?:so|com)\/[^\s<>)"']+/gi) || [];
               const seen = new Set();
               const urls = [];
 
